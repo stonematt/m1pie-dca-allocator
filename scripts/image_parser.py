@@ -1,0 +1,55 @@
+import openai
+from PIL import Image
+import base64
+from io import BytesIO
+import json
+import re
+from datetime import datetime
+from base64 import b64encode
+from scripts.log_util import app_logger
+
+logger = app_logger(__name__)
+
+
+def extract_hybrid_slices_from_image(path: str) -> dict:
+    """
+    Parse an M1 pie screenshot with mixed pies and tickers using GPT-4o Vision.
+
+    Args:
+        path: Path to a local image file.
+
+    Returns:
+        Dictionary of {slice_name: {type: "ticker" | "pie", value: float}}
+    """
+    logger.info(f"[{datetime.now().isoformat()}] Parsing hybrid pie from {path}")
+    with open(path, "rb") as f:
+        b64_img = b64encode(f.read()).decode("utf-8")
+
+    resp = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Return JSON with structure: {name: {type: 'pie'|'ticker', value: float}}. "
+                        "Detect tickers vs. sub-pies. No markdown or formatting.",
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/png;base64,{b64_img}"},
+                    },
+                ],
+            }
+        ],
+        max_tokens=500,
+    )
+
+    raw = resp.choices[0].message.content.strip()
+    raw = re.sub(r"^```json|```$", "", raw, flags=re.MULTILINE).strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        logger.error("Failed to parse hybrid pie JSON from GPT response")
+        raise
