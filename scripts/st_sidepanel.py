@@ -1,15 +1,17 @@
 """Streamlit sidebar: Portfolio selection, creation, deletion."""
 
-import streamlit as st
 import os
+
+import streamlit as st
+
+from scripts.log_util import app_logger
 from scripts.portfolio import (
+    create_portfolio,
+    delete_portfolio,
     list_portfolios,
     load_portfolio,
-    save_portfolio,
     normalize_portfolio,
-    delete_portfolio,
 )
-from scripts.log_util import app_logger
 
 logger = app_logger(__name__)
 
@@ -50,14 +52,9 @@ def render_sidepanel():
 
         st.divider()
         st.header("\u2795 New Portfolio")
-        new_name = st.text_input("New Portfolio Name", value="new_portfolio")
-        if st.button("Create"):
-            new_path = os.path.join(DATA_DIR, f"{new_name}.json")
-            if not os.path.exists(new_path):
-                logger.info(f"Creating new portfolio {new_name}")
-                empty = {"name": new_name, "type": "pie", "value": 0.0, "children": {}}
-                save_portfolio(empty, new_path)
-                st.success(f"Created {new_name}.json")
-                st.rerun()
-            else:
-                st.warning("Portfolio already exists.")
+        st.text_input(
+            "New Portfolio Name",
+            value="new_portfolio",
+            key="new_portfolio_name",
+            on_change=create_portfolio,
+        )

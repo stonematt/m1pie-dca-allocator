@@ -3,11 +3,14 @@
 Handles parsing of canonical JSON format and recursive weight normalization.
 """
 
-import os
 import glob
 import json
+import os
 from decimal import Decimal
-from typing import Dict, Any
+from typing import Any, Dict
+
+import pandas as pd
+
 from scripts.log_util import app_logger
 
 logger = app_logger(__name__)
@@ -46,6 +49,28 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
         return node
 
     return recurse(portfolio)
+
+
+def create_portfolio() -> None:
+    """
+    Create and load a new portfolio from Streamlit input.
+    Uses session state: 'new_portfolio_name', 'DATA_DIR'.
+    """
+    import streamlit as st
+
+    name = st.session_state.get("new_portfolio_name", "main")
+    directory = st.session_state["DATA_DIR"]
+    path = os.path.join(directory, f"{name}.json")
+
+    if not os.path.exists(path):
+        logger.info(f"Creating new portfolio {name}")
+        portfolio = {"name": name, "type": "pie", "value": 0.0, "children": {}}
+        save_portfolio(portfolio, path)
+        st.session_state["portfolio"] = normalize_portfolio(portfolio)
+        st.session_state["portfolio_file"] = f"{name}.json"
+        st.success(f"Created and loaded {name}.json")
+    else:
+        st.warning("Portfolio already exists.")
 
 
 def load_or_create_portfolio(path: str = "data/portfolio.json") -> Dict[str, Any]:
@@ -143,3 +168,27 @@ def update_children(portfolio: dict, parsed: dict) -> dict:
             logger.warning(f"Skipping malformed slice: {name} -> {meta}")
 
     return portfolio
+
+
+def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
+    """
+    Format portfolio children into a display-ready table.
+
+    :param portfolio: Portfolio root node.
+    :return: DataFrame with icon, name, value, and weight.
+    """
+    rows = []
+    children = portfolio.get("children", {})
+    for name, child in children.items():
+        icon = "◔" if child["type"] == "pie" else "📈"
+        value = float(child["value"])
+        weight = float(child["weight"]) * 100
+        rows.append(
+            {
+                " ": icon,
+                "Name": name,
+                "Value": f"${value:,.2f}",
+                "Weight": f"{weight:.1f}%",
+            }
+        )
+    return pd.DataFrame(rows)
