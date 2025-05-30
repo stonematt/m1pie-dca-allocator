@@ -35,6 +35,8 @@ def render_sidepanel():
                     st.session_state["portfolio"] = normalize_portfolio(portfolio)
                     st.session_state["portfolio_file"] = name
             with col2:
+                # TODO: On portfolio delete, clear session state and remove any UI artifacts
+                #       if the deleted portfolio was currently loaded.
                 if st.button("\u274C", key=f"delete_{name}"):
                     st.session_state["confirm_delete"] = name
 
