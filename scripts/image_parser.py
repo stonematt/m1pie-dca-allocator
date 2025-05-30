@@ -51,9 +51,11 @@ def _build_vision_prompt(b64_img: str) -> list:
                 {
                     "type": "text",
                     "text": (
-                        "Return JSON with structure: "
-                        "{name: {type: 'pie'|'ticker', value: float}}. "
-                        "Detect tickers vs. sub-pies. No markdown or formatting."
+                        "Return raw JSON with structure: {name: {type: 'pie' | 'ticker', value: float}}. "
+                        "A 'pie' contains multiple stocks and is often labeled like a folder. "
+                        "Use 'pie' for any container or category of tickers. "
+                        "Use 'ticker' only for individual tradable securities. "
+                        "Do not include markdown or extra explanation—JSON only."
                     ),
                 },
                 {
