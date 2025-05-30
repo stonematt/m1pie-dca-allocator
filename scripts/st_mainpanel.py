@@ -1,16 +1,18 @@
 """Streamlit main panel: Portfolio summary and image parsing."""
 
-import streamlit as st
 import os
+
+import streamlit as st
 from PIL import Image
-from scripts.portfolio import (
-    save_portfolio,
-    normalize_portfolio,
-    summarize_children,
-    update_children,
-)
+
 from scripts.image_parser import extract_hybrid_slices_from_image
 from scripts.log_util import app_logger
+from scripts.portfolio import (
+    format_portfolio_table,
+    normalize_portfolio,
+    save_portfolio,
+    update_children,
+)
 
 logger = app_logger(__name__)
 
@@ -18,6 +20,8 @@ logger = app_logger(__name__)
 def render_mainpanel():
     """
     Render the main content panel: portfolio display and image upload.
+
+    :return: None
     """
     st.title("\U0001F4C8 M1 Pie DCA Allocator")
 
@@ -33,8 +37,8 @@ def render_mainpanel():
     st.subheader(f"Total Value: ${portfolio['value']:.2f}")
 
     if portfolio.get("children"):
-        for name, value, percent in summarize_children(portfolio):
-            st.markdown(f"- **{name}**: ${value:.2f} ({percent:.2f}%)")
+        df = format_portfolio_table(portfolio)
+        st.table(df)
     else:
         st.info("This portfolio has no children.")
 
