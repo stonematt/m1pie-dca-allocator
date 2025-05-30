@@ -46,7 +46,9 @@ def render_mainpanel():
 
     if img_file:
         image = Image.open(img_file)
-        parsed = extract_hybrid_slices_from_image(img_file.name)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
+        parsed = extract_hybrid_slices_from_image(img_file)
+        logger.info(f"Parsed slices: {parsed}")
 
         if parsed:
             updated = update_children(portfolio, parsed)
