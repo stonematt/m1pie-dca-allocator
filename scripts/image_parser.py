@@ -1,11 +1,20 @@
-import openai
+"""
+image_parser.py: Extract hybrid pie structures from M1 screenshots using GPT-4o Vision.
+
+Parses screenshots via the OpenAI Vision API and returns structured JSON identifying
+tickers and sub-pies. Encodes uploaded files to base64 PNG format for transmission.
+"""
+
 import json
 import re
-from datetime import datetime
 from base64 import b64encode
+from datetime import datetime
 from io import BytesIO
-from PIL import Image
+
+import openai
 import streamlit as st
+from PIL import Image
+
 from scripts.log_util import app_logger
 
 openai.api_key = st.secrets["openai"]["api_key"]
