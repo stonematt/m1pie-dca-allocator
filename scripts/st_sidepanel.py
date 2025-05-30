@@ -54,7 +54,7 @@ def render_sidepanel():
         st.header("\u2795 New Portfolio")
         st.text_input(
             "New Portfolio Name",
-            value="new_portfolio",
+            value="",
             key="new_portfolio_name",
             on_change=create_portfolio,
         )
