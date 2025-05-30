@@ -1,29 +1,35 @@
 import openai
-from PIL import Image
-import base64
-from io import BytesIO
 import json
 import re
 from datetime import datetime
 from base64 import b64encode
+from io import BytesIO
+from PIL import Image
+import streamlit as st
 from scripts.log_util import app_logger
+
+openai.api_key = st.secrets["openai"]["api_key"]
 
 logger = app_logger(__name__)
 
 
-def extract_hybrid_slices_from_image(path: str) -> dict:
+def extract_hybrid_slices_from_image(file) -> dict:
     """
     Parse an M1 pie screenshot with mixed pies and tickers using GPT-4o Vision.
 
     Args:
-        path: Path to a local image file.
+        file: File-like object from Streamlit uploader.
 
     Returns:
         Dictionary of {slice_name: {type: "ticker" | "pie", value: float}}
     """
-    logger.info(f"[{datetime.now().isoformat()}] Parsing hybrid pie from {path}")
-    with open(path, "rb") as f:
-        b64_img = b64encode(f.read()).decode("utf-8")
+    logger.info(f"[{datetime.now().isoformat()}] Parsing hybrid pie from uploaded file")
+
+    # Ensure valid PNG encoding for OpenAI API
+    image = Image.open(file).convert("RGB")
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    b64_img = b64encode(buffered.getvalue()).decode("utf-8")
 
     resp = openai.chat.completions.create(
         model="gpt-4o",
@@ -33,8 +39,11 @@ def extract_hybrid_slices_from_image(path: str) -> dict:
                 "content": [
                     {
                         "type": "text",
-                        "text": "Return JSON with structure: {name: {type: 'pie'|'ticker', value: float}}. "
-                        "Detect tickers vs. sub-pies. No markdown or formatting.",
+                        "text": (
+                            "Return JSON with structure: "
+                            "{name: {type: 'pie'|'ticker', value: float}}. "
+                            "Detect tickers vs. sub-pies. No markdown or formatting."
+                        ),
                     },
                     {
                         "type": "image_url",
@@ -48,6 +57,7 @@ def extract_hybrid_slices_from_image(path: str) -> dict:
 
     raw = resp.choices[0].message.content.strip()
     raw = re.sub(r"^```json|```$", "", raw, flags=re.MULTILINE).strip()
+
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
