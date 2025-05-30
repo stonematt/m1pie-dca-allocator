@@ -10,6 +10,7 @@ from decimal import Decimal
 from typing import Any, Dict
 
 import pandas as pd
+import streamlit as st
 
 from scripts.log_util import app_logger
 
@@ -56,9 +57,8 @@ def create_portfolio() -> None:
     Create and load a new portfolio from Streamlit input.
     Uses session state: 'new_portfolio_name', 'DATA_DIR'.
     """
-    import streamlit as st
 
-    name = st.session_state.get("new_portfolio_name", "main")
+    name = st.session_state.get("new_portfolio_name", "main").strip()
     directory = st.session_state["DATA_DIR"]
     path = os.path.join(directory, f"{name}.json")
 
@@ -68,6 +68,7 @@ def create_portfolio() -> None:
         save_portfolio(portfolio, path)
         st.session_state["portfolio"] = normalize_portfolio(portfolio)
         st.session_state["portfolio_file"] = f"{name}.json"
+        st.session_state["new_portfolio_name"] = ""  # Clear input box
         st.success(f"Created and loaded {name}.json")
     else:
         st.warning("Portfolio already exists.")
