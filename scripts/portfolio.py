@@ -37,6 +37,8 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
     def recurse(node):
         if node["type"] == "ticker":
             return node
+        if "children" not in node:
+            node["children"] = {}
         total = sum(child["value"] for child in node["children"].values())
         for k, v in node["children"].items():
             v["weight"] = Decimal(v["value"]) / Decimal(total)
@@ -122,19 +124,22 @@ def delete_portfolio(filename: str, directory: str = "data") -> None:
     os.remove(path)
 
 
-def update_children(
-    portfolio: Dict[str, Any], new_children: Dict[str, float]
-) -> Dict[str, Any]:
+def update_children(portfolio: dict, parsed: dict) -> dict:
     """
-    Merge new tickers and values into an existing portfolio's children.
+    Update the children of a portfolio with parsed slice values.
 
-    :param portfolio: Existing portfolio dictionary.
-    :param new_children: Mapping of ticker symbol to value.
-    :return: Updated portfolio dictionary.
+    :param portfolio: The portfolio node to modify.
+    :param parsed: Mapping of slice_name to {"type": str, "value": float}.
+    :return: The updated portfolio dictionary.
     """
-    logger.info("Updating portfolio with parsed children")
-    children = portfolio.get("children", {})
-    for ticker, value in new_children.items():
-        children[ticker] = {"type": "ticker", "value": float(value)}
-    portfolio["children"] = children
+    children = portfolio.setdefault("children", {})
+
+    for name, meta in parsed.items():
+        try:
+            _type = meta["type"]
+            _value = float(meta["value"])
+            children[name] = {"type": _type, "value": _value}
+        except (KeyError, TypeError, ValueError):
+            logger.warning(f"Skipping malformed slice: {name} -> {meta}")
+
     return portfolio
