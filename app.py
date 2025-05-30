@@ -1,10 +1,12 @@
 """Main entry point for the M1 Pie DCA Allocator Streamlit app."""
 
-import streamlit as st
 import os
+
+import streamlit as st
+
 from scripts.log_util import app_logger
-from scripts.st_sidepanel import render_sidepanel
 from scripts.st_mainpanel import render_mainpanel
+from scripts.st_sidepanel import render_sidepanel
 
 logger = app_logger(__name__)
 
