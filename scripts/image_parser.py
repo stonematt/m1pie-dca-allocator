@@ -181,7 +181,7 @@ def _apply_parsed_to_portfolio(portfolio, parsed, portfolio_file, data_dir):
         logger.warning(f"Portfolio file missing: {portfolio_file}")
         st.warning("Portfolio file not found. Please create or reload the portfolio.")
         return
-    updated = update_children(portfolio, {parsed})
+    updated = update_children(portfolio, parsed)
     save_portfolio(updated, save_path)
     st.session_state["portfolio"] = normalize_portfolio(updated)
     st.session_state["image_processed"] = True
