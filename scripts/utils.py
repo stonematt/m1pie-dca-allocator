@@ -3,7 +3,9 @@
 Provides conversion helpers to ensure numerical consistency.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+import hashlib
+from decimal import ROUND_HALF_UP, Decimal
+from typing import BinaryIO
 
 
 def to_decimal(value: float) -> Decimal:
@@ -14,3 +16,8 @@ def to_decimal(value: float) -> Decimal:
     :return: Rounded Decimal value.
     """
     return Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def file_hash(file: BinaryIO) -> str:
+    """Generate SHA-256 hash for a file-like object."""
+    return hashlib.sha256(file.read()).hexdigest()

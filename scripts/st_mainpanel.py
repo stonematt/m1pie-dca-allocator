@@ -13,6 +13,7 @@ from scripts.portfolio import (
     save_portfolio,
     update_children,
 )
+from scripts.utils import file_hash
 
 logger = app_logger(__name__)
 
@@ -23,7 +24,7 @@ def render_mainpanel():
 
     :return: None
     """
-    st.title("\U0001F4C8 M1 Pie DCA Allocator")
+    st.title("📈 M1 Pie DCA Allocator")
 
     if "portfolio" not in st.session_state:
         st.info("Select or create a portfolio to begin.")
@@ -43,21 +44,46 @@ def render_mainpanel():
         st.info("This portfolio has no children.")
 
     st.divider()
-    st.subheader("\U0001F5BC Upload Screenshot")
+    st.subheader("🖼️ Upload Screenshot")
+
     img_file = st.file_uploader(
-        "Upload M1 screenshot (mixed pies/tickers)", type=["png", "jpg", "jpeg"]
+        "Upload M1 screenshot (mixed pies/tickers)",
+        type=["png", "jpg", "jpeg"],
+        key="uploaded_image",
     )
 
+    reparse = st.checkbox("Force re-parse image")
+
     if img_file:
+        img_file.seek(0)
+        current_hash = file_hash(img_file)
+
+        if st.session_state.get("current_image_hash") != current_hash:
+            st.session_state["image_processed"] = False
+            st.session_state["current_image_hash"] = current_hash
+
         image = Image.open(img_file)
         st.image(image, caption="Uploaded Image", use_container_width=True)
-        parsed = extract_hybrid_slices_from_image(img_file)
-        logger.info(f"Parsed slices: {parsed}")
 
-        if parsed:
+        if "parsed_images" not in st.session_state:
+            st.session_state["parsed_images"] = {}
+
+        if reparse or current_hash not in st.session_state["parsed_images"]:
+            img_file.seek(0)
+            parsed = extract_hybrid_slices_from_image(
+                img_file, st.secrets["openai"]["api_key"]
+            )
+            st.session_state["parsed_images"][current_hash] = parsed
+            logger.info(f"Parsed slices (new): {parsed}")
+        else:
+            parsed = st.session_state["parsed_images"][current_hash]
+            logger.info(f"Parsed slices (cached): {parsed}")
+
+        if parsed and not st.session_state.get("image_processed"):
             updated = update_children(portfolio, parsed)
             save_path = os.path.join(DATA_DIR, portfolio_file)
             save_portfolio(updated, save_path)
             st.session_state["portfolio"] = normalize_portfolio(updated)
+            st.session_state["image_processed"] = True
             st.success(f"Added/updated {len(parsed)} slices.")
             st.rerun()
