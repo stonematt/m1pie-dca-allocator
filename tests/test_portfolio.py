@@ -1,7 +1,9 @@
+import json
 import os
 import tempfile
+from decimal import ROUND_HALF_UP, Decimal
+
 import pytest
-from decimal import Decimal, ROUND_HALF_UP
 
 from scripts.portfolio import (
     list_portfolios,
@@ -73,6 +75,18 @@ def test_update_children_overwrites_existing():
     assert "weight" not in result["children"]["A"]
 
 
+def test_update_children_accepts_parsed_image_data(base_portfolio):
+    """Ensure update_children correctly converts parsed slice input into portfolio structure."""
+    parsed = {
+        "FRB23Q1": {"type": "pie", "value": 1845.07},
+        "RB21Q4": {"type": "pie", "value": 886.61},
+        "FB25-4": {"type": "pie", "value": 307.36},
+    }
+    updated = update_children(base_portfolio, parsed)
+    assert updated["children"]["FRB23Q1"]["value"] == 1845.07
+    assert updated["children"]["FB25-4"]["type"] == "pie"
+
+
 def test_save_and_load_portfolio_consistency():
     """Test that saving and reloading a portfolio yields the same data."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -92,3 +106,18 @@ def test_list_portfolios_filters_json():
                 f.write("{}")
         files = list_portfolios(tmp)
         assert set(files) == {"a.json", "b.json"}
+
+
+def test_save_portfolio_with_decimals(base_portfolio, tmp_path):
+    """Ensure save_portfolio correctly serializes Decimal values."""
+    # Normalize to inject Decimal weights
+    normalized = normalize_portfolio(base_portfolio)
+    path = tmp_path / "portfolio.json"
+
+    save_portfolio(normalized, str(path))
+
+    with open(path) as f:
+        data = json.load(f)
+    assert data["children"]["A"]["weight"] == float(
+        normalized["children"]["A"]["weight"]
+    )
