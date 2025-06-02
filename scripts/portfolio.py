@@ -118,7 +118,14 @@ def save_portfolio(
     logger.info(f"Saving portfolio to {path}")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
-        json.dump(portfolio, f, indent=2)
+        json.dump(portfolio, f, indent=2, default=_json_fallback)
+
+
+def _json_fallback(obj):
+    """Convert Decimal to float for JSON serialization."""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 
 def summarize_children(portfolio: Dict[str, Any]) -> list[tuple[str, float, float]]:
@@ -180,6 +187,7 @@ def update_children(portfolio: dict, parsed: dict) -> dict:
         except (KeyError, TypeError, ValueError):
             logger.warning(f"Skipping malformed slice: {name} -> {meta}")
 
+    logger.debug(f"Final merged children: {children}")
     return portfolio
 
 
