@@ -31,22 +31,31 @@ def load_portfolio(path: str) -> Dict[str, Any]:
 
 def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Recalculate and inject weight values for all child nodes recursively.
+    Recalculate and inject weight values for all child nodes recursively
+    based on their `value`. Uses Decimal for precision.
 
     :param portfolio: Portfolio root node.
     :return: Portfolio with weights populated at each pie level.
     """
     logger.info("Normalizing portfolio weights")
 
-    def recurse(node):
+    def recurse(node: Dict[str, Any]) -> Dict[str, Any]:
         if node["type"] == "ticker":
             return node
         if "children" not in node:
             node["children"] = {}
-        total = sum(child["value"] for child in node["children"].values())
-        for k, v in node["children"].items():
-            v["weight"] = Decimal(v["value"]) / Decimal(total)
-            recurse(v)
+
+        total = sum(
+            Decimal(child.get("value", "0")) for child in node["children"].values()
+        )
+
+        for child in node["children"].values():
+            if total > 0:
+                child["weight"] = Decimal(child["value"]) / total
+            else:
+                child["weight"] = Decimal("0")
+            recurse(child)
+
         return node
 
     return recurse(portfolio)
