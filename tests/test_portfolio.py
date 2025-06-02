@@ -1,6 +1,6 @@
-import json
 import os
 import tempfile
+import pytest
 from decimal import Decimal, ROUND_HALF_UP
 
 from scripts.portfolio import (
@@ -12,9 +12,10 @@ from scripts.portfolio import (
 )
 
 
-def test_normalize_portfolio_weights():
-    """Verify weights are correctly calculated from values after normalization."""
-    p = {
+@pytest.fixture
+def base_portfolio():
+    """Fixture providing a base test portfolio with known children and values."""
+    return {
         "name": "test",
         "type": "pie",
         "value": 0,
@@ -24,7 +25,11 @@ def test_normalize_portfolio_weights():
             "C": {"type": "ticker", "value": 80},
         },
     }
-    result = normalize_portfolio(p)
+
+
+def test_normalize_portfolio_weights(base_portfolio):
+    """Ensure weights are correctly calculated from values in a flat pie."""
+    result = normalize_portfolio(base_portfolio)
     assert result["children"]["A"]["value"] == Decimal("20")
     assert result["children"]["B"]["value"] == Decimal("40")
     assert result["children"]["C"]["value"] == Decimal("80")
@@ -40,7 +45,7 @@ def test_normalize_portfolio_weights():
 
 
 def test_update_children_merges_correctly():
-    """Ensure new slices are merged into portfolio without removing existing ones."""
+    """Check that update_children merges new keys into portfolio children."""
     base = {
         "name": "x",
         "type": "pie",
@@ -54,7 +59,7 @@ def test_update_children_merges_correctly():
 
 
 def test_update_children_overwrites_existing():
-    """Verify patch correctly replaces existing child values and strips weight."""
+    """Check that update_children replaces an existing child's value and strips weight."""
     base = {
         "name": "x",
         "type": "pie",
@@ -68,7 +73,7 @@ def test_update_children_overwrites_existing():
 
 
 def test_save_and_load_portfolio_consistency():
-    """Check that portfolio JSON saves and loads without data loss."""
+    """Test that saving and reloading a portfolio yields the same data."""
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "portfolio.json")
         data = {"name": "demo", "type": "pie", "value": 0, "children": {}}
@@ -78,7 +83,7 @@ def test_save_and_load_portfolio_consistency():
 
 
 def test_list_portfolios_filters_json():
-    """Ensure only `.json` files are returned when listing portfolios."""
+    """Ensure that only .json files are returned from a directory."""
     with tempfile.TemporaryDirectory() as tmp:
         paths = ["a.json", "b.json", "c.txt"]
         for name in paths:
