@@ -32,10 +32,11 @@ def load_portfolio(path: str) -> Dict[str, Any]:
 def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
     """
     Recalculate and inject weight values for all child nodes recursively
-    based on their `value`. Uses Decimal for precision.
+    based on their `value`. Also updates each pie node's `value` to the
+    sum of its children. Uses Decimal for precision.
 
     :param portfolio: Portfolio root node.
-    :return: Portfolio with weights populated at each pie level.
+    :return: Portfolio with updated weights and values.
     """
     logger.info("Normalizing portfolio weights")
 
@@ -48,6 +49,8 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
         total = sum(
             Decimal(child.get("value", "0")) for child in node["children"].values()
         )
+
+        node["value"] = total
 
         for child in node["children"].values():
             if total > 0:

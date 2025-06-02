@@ -30,6 +30,7 @@ def base_portfolio():
 def test_normalize_portfolio_weights(base_portfolio):
     """Ensure weights are correctly calculated from values in a flat pie."""
     result = normalize_portfolio(base_portfolio)
+    assert result["value"] == Decimal("140")
     assert result["children"]["A"]["value"] == Decimal("20")
     assert result["children"]["B"]["value"] == Decimal("40")
     assert result["children"]["C"]["value"] == Decimal("80")
