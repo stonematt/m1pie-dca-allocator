@@ -13,6 +13,7 @@ from scripts.portfolio import (
 
 
 def test_normalize_portfolio_weights():
+    """Verify weights are correctly calculated from values after normalization."""
     p = {
         "name": "test",
         "type": "pie",
@@ -39,6 +40,7 @@ def test_normalize_portfolio_weights():
 
 
 def test_update_children_merges_correctly():
+    """Ensure new slices are merged into portfolio without removing existing ones."""
     base = {
         "name": "x",
         "type": "pie",
@@ -52,6 +54,7 @@ def test_update_children_merges_correctly():
 
 
 def test_update_children_overwrites_existing():
+    """Verify patch correctly replaces existing child values and strips weight."""
     base = {
         "name": "x",
         "type": "pie",
@@ -65,6 +68,7 @@ def test_update_children_overwrites_existing():
 
 
 def test_save_and_load_portfolio_consistency():
+    """Check that portfolio JSON saves and loads without data loss."""
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "portfolio.json")
         data = {"name": "demo", "type": "pie", "value": 0, "children": {}}
@@ -74,6 +78,7 @@ def test_save_and_load_portfolio_consistency():
 
 
 def test_list_portfolios_filters_json():
+    """Ensure only `.json` files are returned when listing portfolios."""
     with tempfile.TemporaryDirectory() as tmp:
         paths = ["a.json", "b.json", "c.txt"]
         for name in paths:
