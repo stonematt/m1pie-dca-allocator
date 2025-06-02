@@ -5,4 +5,4 @@ matplotlib>=3.7.0
 jupyterlab>=4.0.0
 ipykernel>=6.25.0
 pandas>=1.0.0
-pytesseract>=0.3.10  # Only used in the notebook, can be optional
+pytesseract>=0.3.10  # optional, used only in notebooks
