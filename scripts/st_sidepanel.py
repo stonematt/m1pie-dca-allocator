@@ -27,16 +27,17 @@ def render_sidepanel():
         portfolio_names = list_portfolios(DATA_DIR)
 
         for name in portfolio_names:
+            path = os.path.join(DATA_DIR, name)
+            portfolio = load_portfolio(path)
+            display_name = portfolio.get("name", name)
+
             col1, col2 = st.columns([0.8, 0.2])
             with col1:
-                if st.button(name, key=f"load_{name}"):
-                    path = os.path.join(DATA_DIR, name)
-                    portfolio = load_portfolio(path)
+                if st.button(display_name, key=f"load_{name}"):
                     st.session_state["portfolio"] = normalize_portfolio(portfolio)
                     st.session_state["portfolio_file"] = name
+
             with col2:
-                # TODO: On portfolio delete, clear session state and remove any UI artifacts
-                #       if the deleted portfolio was currently loaded.
                 if st.button("\u274C", key=f"delete_{name}"):
                     st.session_state["confirm_delete"] = name
 
