@@ -44,11 +44,24 @@ def render_sidepanel():
             name = st.session_state["confirm_delete"]
             st.warning(f"Confirm delete: {name}")
             confirm_col, cancel_col = st.columns(2)
+
             if confirm_col.button("Yes, Delete"):
                 delete_portfolio(name, DATA_DIR)
+
+                # Clear session state if deleted portfolio was active
+                if st.session_state.get("portfolio_file") == name:
+                    for key in [
+                        "portfolio",
+                        "portfolio_file",
+                        "adjusted_portfolio",
+                        "image_processed",
+                    ]:
+                        st.session_state.pop(key, None)
+
                 del st.session_state["confirm_delete"]
                 st.success(f"Deleted {name}")
                 st.rerun()
+
             if cancel_col.button("Cancel"):
                 del st.session_state["confirm_delete"]
 
