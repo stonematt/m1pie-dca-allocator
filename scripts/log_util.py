@@ -18,23 +18,19 @@ def app_logger(name, level=logging.INFO, log_file=None):
     :param log_file: Optional. If provided, logs will also be written to this file.
     :return: Configured logger instance.
     """
-    # Create a logger
     logger = logging.getLogger(name)
     logger.setLevel(level)
     logger.handlers.clear()  # Clear existing handlers to avoid duplicates
 
-    # Create formatter
     formatter = logging.Formatter(
         fmt="%(asctime)s - %(levelname)s - %(module)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # File handler (if log_file is specified)
     if log_file:
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(level)
@@ -42,3 +38,16 @@ def app_logger(name, level=logging.INFO, log_file=None):
         logger.addHandler(file_handler)
 
     return logger
+
+
+def set_log_level(level_str):
+    """
+    Updates the log level for all registered loggers.
+
+    :param level_str: Log level as a string (e.g., 'DEBUG', 'INFO').
+    :return: None
+    """
+    level = getattr(logging, level_str.upper(), logging.INFO)
+    logging.root.setLevel(level)
+    for logger_name in logging.root.manager.loggerDict:
+        logging.getLogger(logger_name).setLevel(level)
