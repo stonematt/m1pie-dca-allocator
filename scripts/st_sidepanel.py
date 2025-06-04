@@ -36,6 +36,9 @@ def render_sidepanel():
                 if st.button(display_name, key=f"load_{name}"):
                     st.session_state["portfolio"] = normalize_portfolio(portfolio)
                     st.session_state["portfolio_file"] = name
+                    st.session_state.pop(
+                        "adjusted_portfolio", None
+                    )  # Clear any adjustments
 
             with col2:
                 if st.button("\u274C", key=f"delete_{name}"):
