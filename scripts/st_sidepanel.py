@@ -4,7 +4,7 @@ import os
 
 import streamlit as st
 
-from scripts.log_util import app_logger
+from scripts.log_util import app_logger, set_log_level
 from scripts.portfolio import (
     create_portfolio,
     delete_portfolio,
@@ -60,3 +60,15 @@ def render_sidepanel():
             key="new_portfolio_name",
             on_change=create_portfolio,
         )
+
+        st.divider()
+        st.header("🛠️ Settings")
+
+        log_level = st.selectbox(
+            "Log Level",
+            options=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            index=1,
+            key="log_level",
+        )
+        set_log_level(log_level)
+        st.caption(f"Logger set to {log_level}")
