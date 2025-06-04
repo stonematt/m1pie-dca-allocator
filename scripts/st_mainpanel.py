@@ -2,13 +2,14 @@
 
 from decimal import Decimal
 
-import pandas as pd
+# import pandas as pd
 import streamlit as st
 
-from scripts.dca_allocator import compute_target_weights, recalculate_pie_allocation
+from scripts.dca_allocator import recalculate_pie_allocation
 from scripts.image_parser import handle_image_upload
 from scripts.log_util import app_logger
 from scripts.portfolio import format_portfolio_table
+from scripts.st_utils import render_allocation_review_table
 
 logger = app_logger(__name__)
 
@@ -19,8 +20,9 @@ def render_mainpanel():
 
     :return: None
     """
-    st.title("📈 M1 Pie DCA Allocator")
+    st.title("\U0001F4C8 M1 Pie DCA Allocator")
 
+    # Ensure a portfolio is loaded before proceeding
     if "portfolio" not in st.session_state:
         st.info("Select or create a portfolio to begin.")
         return
@@ -42,7 +44,7 @@ def render_mainpanel():
     st.divider()
 
     # Tabs: Upload + Adjust
-    tab1, tab2 = st.tabs(["📤 Upload Image", "🛠 Adjust Positions"])
+    tab1, tab2 = st.tabs(["\U0001F4E4 Upload Image", "\U0001F6E0 Adjust Positions"])
 
     with tab1:
         st.subheader("Upload Screenshot")
@@ -68,6 +70,7 @@ def render_mainpanel():
     with tab2:
         st.subheader("Adjust Positions")
 
+        # Input form for DCA adjustment
         with st.form("adjust_form"):
             row1_col1, row1_col2 = st.columns(2)
             with row1_col1:
@@ -79,6 +82,7 @@ def render_mainpanel():
 
             submit = st.form_submit_button("Recalculate Allocation")
 
+        # Recalculate allocation on submit
         if submit:
             updated = recalculate_pie_allocation(
                 pie_data=st.session_state["portfolio"],
@@ -89,39 +93,9 @@ def render_mainpanel():
             st.session_state["adjusted_portfolio"] = updated
             st.success("Allocation recalculated.")
 
+        # Show review table if adjusted portfolio is available
         if "adjusted_portfolio" in st.session_state:
             st.subheader("Adjusted Allocation Review")
-
-            original = st.session_state["portfolio"]
-            adjusted = st.session_state["adjusted_portfolio"]
-
-            original_children = original["children"]
-            adjusted_children = adjusted["children"]
-
-            data = []
-            total_original = sum(v["value"] for v in original_children.values())
-            total_adjusted = sum(v["value"] for v in adjusted_children.values())
-
-            for k in adjusted_children:
-                current_val = original_children.get(k, {}).get("value", 0.0)
-                target_val = adjusted_children[k]["value"]
-                capital_allocated = target_val - current_val
-
-                current_weight = (
-                    (current_val / total_original * 100) if total_original else 0
-                )
-                target_weight = adjusted_children[k].get("target_weight", 0)
-
-                data.append(
-                    {
-                        "Ticker/Pie": k,
-                        "Current Value": f"${current_val:,.2f}",
-                        "Current Weight": f"{int(round(current_weight))}%",
-                        "Capital Allocated": f"${capital_allocated:,.2f}",
-                        "Target Value": f"${target_val:,.2f}",
-                        "Target Weight": f"{target_weight}%",
-                    }
-                )
-
-            df = pd.DataFrame(data)
-            st.table(df)
+            render_allocation_review_table(
+                st.session_state["portfolio"], st.session_state["adjusted_portfolio"]
+            )
