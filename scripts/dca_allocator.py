@@ -74,6 +74,10 @@ def add_mock_targets(
     :param new_fund_allocation: Capital to divide among them
     :return: Pie with new tickers added and updated value
     """
+    if new_ticker_count == 0:
+        logger.warning("No new tickers to add; skipping mock target generation.")
+        return pie_data
+
     per_ticker = new_fund_allocation / Decimal(new_ticker_count)
     children = pie_data["children"].copy()
 
@@ -86,7 +90,7 @@ def add_mock_targets(
 
     return {
         **pie_data,
-        "value": float(Decimal(pie_data["value"]) + new_fund_allocation),
+        "value": float(pie_data["value"] + float(new_fund_allocation)),
         "children": children,
     }
 

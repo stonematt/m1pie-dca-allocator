@@ -56,9 +56,9 @@ def _build_vision_prompt(b64_img: str) -> list:
                     "type": "text",
                     "text": (
                         "Return raw JSON with structure: {name: {type: 'pie' | 'ticker', value: float}}. "
-                        "A 'pie' contains multiple stocks and is often labeled like a folder. "
-                        "Use 'pie' for any container or category of tickers. "
-                        "Use 'ticker' only for individual tradable securities. "
+                        "A 'pie' represents a folder-like container of tickers, often marked with a pie icon. "
+                        "If the name shows a pie icon (and not a company logo), use type: 'pie'. "
+                        "Use 'ticker' for any individual tradable security with a logo. "
                         "Do not include markdown or extra explanation—JSON only."
                     ),
                 },
@@ -151,7 +151,9 @@ def _parse_and_cache_image(file, current_hash, api_key, reparse=False) -> dict:
     """
     if reparse or current_hash not in st.session_state["parsed_images"]:
         file.seek(0)
-        parsed = extract_hybrid_slices_from_image(file, api_key)
+        # parsed = extract_hybrid_slices_from_image(file, api_key)
+        raw = extract_hybrid_slices_from_image(file, api_key)
+        parsed = clean_parsed_slices(raw)
         if not isinstance(parsed, dict) or not all(
             isinstance(v, dict) and "type" in v and "value" in v
             for v in parsed.values()
@@ -185,5 +187,26 @@ def _apply_parsed_to_portfolio(portfolio, parsed, portfolio_file, data_dir):
     save_portfolio(updated, save_path)
     st.session_state["portfolio"] = normalize_portfolio(updated)
     st.session_state["image_processed"] = True
+    # st.session_state["reparse"] = False  # Uncheck force re-parse
     st.success(f"Added/updated {len(parsed)} slices.")
     st.rerun()
+
+
+def clean_parsed_slices(raw_slices: dict) -> dict:
+    """
+    Ensure all parsed slices from GPT include a valid 'type' field ('ticker' or 'pie').
+
+    :param raw_slices: Raw GPT output
+    :return: Cleaned slice map
+    """
+    cleaned = {}
+    for key, val in raw_slices.items():
+        entry_type = val.get("type", "ticker")  # default to 'ticker'
+        if entry_type not in {"ticker", "pie"}:
+            logger.warning(f"Unknown slice type for '{key}': {entry_type}, skipping.")
+            continue
+        cleaned[key.strip()] = {
+            **val,
+            "type": entry_type,
+        }
+    return cleaned
