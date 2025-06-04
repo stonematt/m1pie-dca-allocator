@@ -105,5 +105,27 @@
       "Upload replaces portfolio in session and on disk.",
       "Old data is discarded."
     ]
+  },
+  {
+    "title": "Improve UX and visualization to optimize screen real estate",
+    "description": "Refine layout and UI elements to make better use of vertical and horizontal space, ensuring clarity and responsiveness.",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "Slider and inputs grouped to reduce vertical footprint.",
+      "Tables and charts are placed side by side when possible.",
+      "Use of `st.dataframe` and currency formatting applied.",
+      "Whitespace and alignment optimized for clarity."
+    ]
+  },
+  {
+    "title": "Use Cookies for Portfolio Persistence",
+    "description": "Persist current portfolio using browser cookies instead of server-side JSON files.",
+    "status": "in_progress",
+    "acceptance_criteria": [
+      "Current portfolio is saved to a browser cookie automatically.",
+      "On app reload, portfolio is restored from the cookie if present.",
+      "Portfolios are compressed/minified to fit typical cookie size limits (~4KB).",
+      "Fallback gracefully if cookie storage exceeds capacity."
+    ]
   }
 ]
