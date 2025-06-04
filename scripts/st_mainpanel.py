@@ -9,7 +9,10 @@ from scripts.dca_allocator import recalculate_pie_allocation
 from scripts.image_parser import handle_image_upload
 from scripts.log_util import app_logger
 from scripts.portfolio import format_portfolio_table
-from scripts.st_utils import render_allocation_review_table
+from scripts.st_utils import (
+    render_allocation_comparison_charts,
+    render_allocation_review_table,
+)
 
 logger = app_logger(__name__)
 
@@ -93,9 +96,17 @@ def render_mainpanel():
             st.session_state["adjusted_portfolio"] = updated
             st.success("Allocation recalculated.")
 
-        # Show review table if adjusted portfolio is available
+        # Show side-by-side review table and allocation pie charts if adjusted portfolio is available
         if "adjusted_portfolio" in st.session_state:
             st.subheader("Adjusted Allocation Review")
-            render_allocation_review_table(
-                st.session_state["portfolio"], st.session_state["adjusted_portfolio"]
-            )
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                render_allocation_review_table(
+                    st.session_state["portfolio"],
+                    st.session_state["adjusted_portfolio"],
+                )
+            with col2:
+                render_allocation_comparison_charts(
+                    st.session_state["portfolio"],
+                    st.session_state["adjusted_portfolio"],
+                )

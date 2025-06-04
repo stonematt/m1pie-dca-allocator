@@ -4,7 +4,9 @@ st_utils.py: Streamlit UI helpers for the M1 Pie DCA Allocator.
 Contains reusable components for visualizing portfolio adjustments,
 such as allocation review tables comparing current and target states.
 """
+
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 
@@ -56,3 +58,48 @@ def render_allocation_review_table(original: dict, adjusted: dict) -> None:
             "Target Value": st.column_config.Column("Target Value", width="small"),
         },
     )
+
+
+def render_allocation_comparison_charts(original: dict, adjusted: dict) -> None:
+    """
+    Render vertically stacked pie charts comparing original and adjusted portfolio weights using Plotly.
+    """
+
+    def extract_pie_data(pie):
+        children = pie.get("children", {})
+        labels = list(children.keys())
+        values = [v["value"] for v in children.values()]
+        return labels, values
+
+    orig_labels, orig_values = extract_pie_data(original)
+    adj_labels, adj_values = extract_pie_data(adjusted)
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Pie(
+            labels=orig_labels,
+            values=orig_values,
+            name="Current",
+            domain=dict(y=[0.55, 1]),
+            hole=0.3,
+            title="Current Allocation",
+            textinfo="label+percent",
+        )
+    )
+
+    fig.add_trace(
+        go.Pie(
+            labels=adj_labels,
+            values=adj_values,
+            name="Adjusted",
+            domain=dict(y=[0, 0.45]),
+            hole=0.3,
+            title="Adjusted Allocation",
+            textinfo="label+percent",
+        )
+    )
+
+    fig.update_layout(height=600, margin=dict(t=40, b=0, l=0, r=0), showlegend=False)
+
+    st.plotly_chart(fig, use_container_width=True)
