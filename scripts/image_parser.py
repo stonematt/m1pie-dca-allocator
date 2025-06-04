@@ -79,7 +79,8 @@ def _call_openai_vision(messages: list, api_key: str) -> str:
         messages=messages,
         max_tokens=500,
     )
-    return resp.choices[0].message.content.strip()
+    content = resp.choices[0].message.content
+    return content.strip() if content else ""
 
 
 def _clean_and_parse_response(raw: str) -> dict:
