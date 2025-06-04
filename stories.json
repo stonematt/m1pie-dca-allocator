@@ -1,0 +1,109 @@
+[
+  {
+    "title": "Parse Portfolio Screenshot via GPT-4 Vision",
+    "description": "Users can upload an image of an M1 pie, which the system parses into structured portfolio data.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Users can upload .png, .jpg, or .jpeg images.",
+      "The image is parsed into JSON with pie/ticker types and values.",
+      "Data is cached and re-parseable."
+    ]
+  },
+  {
+    "title": "Persist Parsed Portfolios",
+    "description": "Parsed data is saved to JSON and reloaded in the UI.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Portfolios are stored in a data/ directory.",
+      "User can select from saved portfolios."
+    ]
+  },
+  {
+    "title": "Display Portfolio Summary",
+    "description": "Render loaded portfolio with ticker/pie breakdowns and weights.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Portfolio shows name, total value, and child breakdowns.",
+      "Includes pie/ticker classification."
+    ]
+  },
+  {
+    "title": "Adjust Allocation with DCA Strategy",
+    "description": "User can allocate new capital using a DCA model across existing and new tickers.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "User inputs new funds, percent to new tickers, and ticker count.",
+      "Adjusted portfolio is calculated and saved."
+    ]
+  },
+  {
+    "title": "Log Level Control in UI",
+    "description": "Users can set application log level via Streamlit.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Log level dropdown available.",
+      "Log output respects selected level."
+    ]
+  },
+  {
+    "title": "Display DCA Allocation Output",
+    "description": "Allocation results shown in a table including capital allocated per position.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Table includes capital allocated, target values, and weights.",
+      "All monetary values are currency-formatted."
+    ]
+  },
+  {
+    "title": "Visualize Allocation Changes",
+    "description": "Show pie charts of original vs adjusted allocations.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Two vertically stacked pies.",
+      "Labels reflect tickers/pies."
+    ]
+  },
+  {
+    "title": "Improve Pie Chart Value Handling",
+    "description": "Address decompression bomb error and switch to Plotly pies.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Uses Plotly.",
+      "Charts render reliably and scale visually."
+    ]
+  },
+  {
+    "title": "Robust Ticker/Pie Classification",
+    "description": "Better logic for distinguishing pies vs tickers, using icon cues and capital casing.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Vision prompt updated.",
+      "Parsers recognize pie icon vs logo."
+    ]
+  },
+  {
+    "title": "Clear Adjusted State on Load",
+    "description": "When user loads a new portfolio, adjusted view is cleared.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Adjusted view doesn’t persist after switching portfolios."
+    ]
+  },
+  {
+    "title": "Delete Portfolio Cleanly",
+    "description": "Deleting a portfolio also clears UI if it’s the active portfolio.",
+    "status": "complete",
+    "acceptance_criteria": [
+      "Removes session state and hides display for deleted."
+    ]
+  },
+  {
+    "title": "Replace Portfolio on Upload",
+    "description": "When an image is parsed, replace current portfolio content instead of merging.",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "Upload replaces portfolio in session and on disk.",
+      "Old data is discarded."
+    ]
+  }
+]
