@@ -1,34 +1,35 @@
 """Streamlit sidebar: Portfolio selection, creation, deletion."""
 
-import os
-
 import streamlit as st
 
-from scripts.log_util import app_logger, set_log_level
-from scripts.portfolio import (
-    create_portfolio,
+from scripts.account import (
+    add_or_replace_portfolio,
     delete_portfolio,
     list_portfolios,
-    load_portfolio,
-    normalize_portfolio,
+    get_portfolio,
 )
+from scripts.cookie_account import load_account_from_cookie, save_account_to_cookie
+from scripts.portfolio import normalize_portfolio
+from scripts.log_util import app_logger, set_log_level
 
 logger = app_logger(__name__)
 
 
 def render_sidepanel():
     """
-    Render the sidebar interface for managing portfolios.
+    Render the sidebar interface for managing portfolios, using cookie-based account storage.
     """
-    DATA_DIR = st.session_state["DATA_DIR"]
-    with st.sidebar:
-        st.header("\U0001F4C1 Portfolios")
+    if "account" not in st.session_state:
+        st.session_state["account"] = load_account_from_cookie()
 
-        portfolio_names = list_portfolios(DATA_DIR)
+    account = st.session_state["account"]
+    portfolio_names = list_portfolios(account)
+
+    with st.sidebar:
+        st.header("\U0001f4c1 Portfolios")
 
         for name in portfolio_names:
-            path = os.path.join(DATA_DIR, name)
-            portfolio = load_portfolio(path)
+            portfolio = get_portfolio(account, name)
             display_name = portfolio.get("name", name)
 
             col1, col2 = st.columns([0.8, 0.2])
@@ -36,12 +37,10 @@ def render_sidepanel():
                 if st.button(display_name, key=f"load_{name}"):
                     st.session_state["portfolio"] = normalize_portfolio(portfolio)
                     st.session_state["portfolio_file"] = name
-                    st.session_state.pop(
-                        "adjusted_portfolio", None
-                    )  # Clear any adjustments
+                    st.session_state.pop("adjusted_portfolio", None)
 
             with col2:
-                if st.button("\u274C", key=f"delete_{name}"):
+                if st.button("❌", key=f"delete_{name}"):
                     st.session_state["confirm_delete"] = name
 
         if "confirm_delete" in st.session_state:
@@ -50,9 +49,10 @@ def render_sidepanel():
             confirm_col, cancel_col = st.columns(2)
 
             if confirm_col.button("Yes, Delete"):
-                delete_portfolio(name, DATA_DIR)
+                account = delete_portfolio(account, name)
+                st.session_state["account"] = account
+                save_account_to_cookie(account)
 
-                # Clear session state if deleted portfolio was active
                 if st.session_state.get("portfolio_file") == name:
                     for key in [
                         "portfolio",
@@ -70,12 +70,23 @@ def render_sidepanel():
                 del st.session_state["confirm_delete"]
 
         st.divider()
-        st.header("\u2795 New Portfolio")
+        st.header("➕ New Portfolio")
+
+        def create_and_save():
+            name = st.session_state["new_portfolio_name"].strip()
+            if name:
+                empty = {"name": name, "type": "pie", "children": {}, "value": 0}
+                st.session_state["account"] = add_or_replace_portfolio(
+                    st.session_state["account"], name, empty
+                )
+                save_account_to_cookie(st.session_state["account"])
+                st.rerun()
+
         st.text_input(
             "New Portfolio Name",
             value="",
             key="new_portfolio_name",
-            on_change=create_portfolio,
+            on_change=create_and_save,
         )
 
         st.divider()
