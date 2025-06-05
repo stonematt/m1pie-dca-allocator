@@ -120,7 +120,7 @@
   {
     "title": "Use Cookies for Portfolio Persistence",
     "description": "Persist current portfolio using real browser cookies (via extra-streamlit-components) instead of server-side storage.",
-    "status": "in_progress",
+    "status": "complete",
     "acceptance_criteria": [
       "Current portfolio is automatically saved to a browser cookie using extra-streamlit-components.",
       "On app reload, portfolio is restored from the cookie if present.",
