@@ -53,7 +53,7 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
 
 def create_named_portfolio(account: dict, name: str) -> dict:
     """
-    Create and add a new empty pie portfolio to the account.
+    Create, persist, and load a new empty pie portfolio into the session.
 
     :param account: Account dictionary
     :param name: Portfolio name
@@ -66,8 +66,11 @@ def create_named_portfolio(account: dict, name: str) -> dict:
         "value": 0.0,
         "children": {},
     }
+    portfolio = normalize_portfolio(portfolio)
     updated = add_or_replace_portfolio(account, name, portfolio)
     save_account_to_cookie(updated)
+    st.session_state["portfolio"] = portfolio
+    st.session_state["portfolio_file"] = name
     return updated
 
 
@@ -143,3 +146,13 @@ def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
+
+
+def create_and_save():
+    name = st.session_state["new_portfolio_name"].strip()
+    if name:
+        st.session_state["account"] = create_named_portfolio(
+            st.session_state["account"], name
+        )
+        st.session_state["new_portfolio_name"] = ""  # Clear input
+        st.rerun()
