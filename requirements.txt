@@ -7,3 +7,4 @@ ipykernel>=6.25.0
 pandas>=1.0.0
 pytesseract>=0.3.10  # optional, used only in notebooks
 plotly
+extra-streamlit-components

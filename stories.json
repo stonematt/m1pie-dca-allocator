@@ -119,13 +119,14 @@
   },
   {
     "title": "Use Cookies for Portfolio Persistence",
-    "description": "Persist current portfolio using browser cookies instead of server-side JSON files.",
+    "description": "Persist current portfolio using real browser cookies (via extra-streamlit-components) instead of server-side storage.",
     "status": "in_progress",
     "acceptance_criteria": [
-      "Current portfolio is saved to a browser cookie automatically.",
+      "Current portfolio is automatically saved to a browser cookie using extra-streamlit-components.",
       "On app reload, portfolio is restored from the cookie if present.",
-      "Portfolios are compressed/minified to fit typical cookie size limits (~4KB).",
-      "Fallback gracefully if cookie storage exceeds capacity."
+      "Portfolios are compressed using zlib + base64 to fit within typical cookie size limits (~4KB).",
+      "If data exceeds cookie limits, fallback gracefully with a user-visible warning.",
+      "Data is stored only client-side, ensuring user privacy and no server-side persistence."
     ]
   }
 ]

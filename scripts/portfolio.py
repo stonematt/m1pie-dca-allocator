@@ -1,11 +1,8 @@
-"""Portfolio data loading and normalization functions.
+"""portfolio.py: Portfolio data loading and normalization functions.
 
 Handles parsing of canonical JSON format and recursive weight normalization.
 """
 
-import glob
-import json
-import os
 from decimal import Decimal
 from typing import Any, Dict
 
@@ -13,20 +10,10 @@ import pandas as pd
 import streamlit as st
 
 from scripts.log_util import app_logger
+from scripts.account import add_or_replace_portfolio
+from scripts.cookie_account import save_account_to_cookie
 
 logger = app_logger(__name__)
-
-
-def load_portfolio(path: str) -> Dict[str, Any]:
-    """
-    Load and parse portfolio JSON file.
-
-    :param path: File path to the JSON portfolio.
-    :return: Portfolio dictionary.
-    """
-    logger.info(f"Loading portfolio from {path}")
-    with open(path, "r") as f:
-        return json.load(f)
 
 
 def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
@@ -49,8 +36,8 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
         total = sum(
             Decimal(child.get("value", "0")) for child in node["children"].values()
         )
-
-        node["value"] = total
+        if node["children"]:
+            node["value"] = total  # Only recalculate if children exist
 
         for child in node["children"].values():
             if total > 0:
@@ -64,68 +51,27 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
     return recurse(portfolio)
 
 
-def create_portfolio() -> None:
+def create_named_portfolio(account: dict, name: str) -> dict:
     """
-    Create and load a new portfolio from Streamlit input.
-    Uses session state: 'new_portfolio_name', 'DATA_DIR'.
+    Create, persist, and load a new empty pie portfolio into the session.
+
+    :param account: Account dictionary
+    :param name: Portfolio name
+    :return: Updated account with new portfolio added
     """
-
-    name = st.session_state.get("new_portfolio_name", "main").strip()
-    directory = st.session_state["DATA_DIR"]
-    path = os.path.join(directory, f"{name}.json")
-
-    if not os.path.exists(path):
-        logger.info(f"Creating new portfolio {name}")
-        portfolio = {"name": name, "type": "pie", "value": 0.0, "children": {}}
-        save_portfolio(portfolio, path)
-        st.session_state["portfolio"] = normalize_portfolio(portfolio)
-        st.session_state["portfolio_file"] = f"{name}.json"
-        st.session_state["new_portfolio_name"] = ""  # Clear input box
-        st.success(f"Created and loaded {name}.json")
-    else:
-        st.warning("Portfolio already exists.")
-
-
-def load_or_create_portfolio(path: str = "data/portfolio.json") -> Dict[str, Any]:
-    """
-    Load portfolio JSON if it exists, else return empty structure.
-
-    :param path: File path to the JSON portfolio.
-    :return: Portfolio dictionary (existing or new).
-    """
-    if os.path.exists(path):
-        logger.info(f"Found existing portfolio at {path}")
-        with open(path, "r") as f:
-            return json.load(f)
-    logger.info(f"Creating new empty portfolio at {path}")
-    return {
-        "name": os.path.splitext(os.path.basename(path))[0],
+    logger.info(f"Creating new portfolio {name}")
+    portfolio = {
+        "name": name,
         "type": "pie",
         "value": 0.0,
         "children": {},
     }
-
-
-def save_portfolio(
-    portfolio: Dict[str, Any], path: str = "data/portfolio.json"
-) -> None:
-    """
-    Save portfolio dictionary to disk.
-
-    :param portfolio: Portfolio structure to save.
-    :param path: File path for JSON output.
-    """
-    logger.info(f"Saving portfolio to {path}")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as f:
-        json.dump(portfolio, f, indent=2, default=_json_fallback)
-
-
-def _json_fallback(obj):
-    """Convert Decimal to float for JSON serialization."""
-    if isinstance(obj, Decimal):
-        return float(obj)
-    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+    portfolio = normalize_portfolio(portfolio)
+    updated = add_or_replace_portfolio(account, name, portfolio)
+    save_account_to_cookie(updated)
+    st.session_state["portfolio"] = portfolio
+    st.session_state["portfolio_file"] = name
+    return updated
 
 
 def summarize_children(portfolio: Dict[str, Any]) -> list[tuple[str, float, float]]:
@@ -144,31 +90,6 @@ def summarize_children(portfolio: Dict[str, Any]) -> list[tuple[str, float, floa
     return summary
 
 
-def list_portfolios(directory: str = "data") -> list[str]:
-    """
-    List all portfolio JSON files in the given directory.
-
-    :param directory: Folder to search for portfolio files.
-    :return: List of filenames.
-    """
-    logger.info(f"Listing portfolios in {directory}")
-    return sorted(
-        os.path.basename(p) for p in glob.glob(os.path.join(directory, "*.json"))
-    )
-
-
-def delete_portfolio(filename: str, directory: str = "data") -> None:
-    """
-    Delete a portfolio JSON file by filename.
-
-    :param filename: Filename of the portfolio to delete.
-    :param directory: Folder containing the file.
-    """
-    path = os.path.join(directory, filename)
-    logger.info(f"Deleting portfolio {path}")
-    os.remove(path)
-
-
 def update_children(portfolio: dict, parsed: dict) -> dict:
     """
     Update the children of a portfolio with parsed slice values.
@@ -182,13 +103,26 @@ def update_children(portfolio: dict, parsed: dict) -> dict:
     for name, meta in parsed.items():
         try:
             _type = meta["type"]
-            _value = float(meta["value"])
+            # _value = float(meta["value"])
+            _value = Decimal(str(meta["value"]))
             children[name] = {"type": _type, "value": _value}
         except (KeyError, TypeError, ValueError):
             logger.warning(f"Skipping malformed slice: {name} -> {meta}")
 
     logger.debug(f"Final merged children: {children}")
+    save_current_portfolio()
     return portfolio
+
+
+def save_current_portfolio():
+    """
+    Save the current portfolio to the session's account and persist to cookie.
+    """
+    account = st.session_state["account"]
+    portfolio = st.session_state["portfolio"]
+    updated = add_or_replace_portfolio(account, portfolio["name"], portfolio)
+    st.session_state["account"] = updated
+    save_account_to_cookie(updated)
 
 
 def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
@@ -213,3 +147,13 @@ def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
+
+
+def create_and_save():
+    name = st.session_state["new_portfolio_name"].strip()
+    if name:
+        st.session_state["account"] = create_named_portfolio(
+            st.session_state["account"], name
+        )
+        st.session_state["new_portfolio_name"] = ""  # Clear input
+        st.rerun()
