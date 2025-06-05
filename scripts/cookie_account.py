@@ -9,6 +9,8 @@ import json
 import zlib
 from decimal import Decimal
 
+import streamlit as st
+
 from scripts.account import create_empty_account
 from scripts.cookie_manager import get_cookie, set_cookie
 from scripts.log_util import app_logger
@@ -32,6 +34,7 @@ def save_account_to_cookie(account: dict) -> None:
 
         if len(encoded) > COOKIE_LIMIT_BYTES:
             logger.warning("Cookie size exceeds 4KB, not saving.")
+            st.warning("Account not saved: cookie size limit exceeded.")
             return
 
         set_cookie(COOKIE_KEY, encoded)
@@ -39,6 +42,7 @@ def save_account_to_cookie(account: dict) -> None:
 
     except Exception as e:
         logger.error(f"Failed to save account to cookie: {e}")
+        st.error("Failed to save account. See logs for details.")
 
 
 def load_account_from_cookie() -> dict:
