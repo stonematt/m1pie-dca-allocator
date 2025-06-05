@@ -11,8 +11,8 @@ logger = app_logger(__name__)
 
 
 def get_cookie_manager():
-    """Return a CookieManager instance (do not cache)."""
-    return stx.CookieManager()
+    """Return a CookieManager instance with a consistent key."""
+    return stx.CookieManager(key="cookie_manager_main")
 
 
 def get_cookie(key: str) -> str | None:
