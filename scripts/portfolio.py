@@ -36,8 +36,8 @@ def normalize_portfolio(portfolio: Dict[str, Any]) -> Dict[str, Any]:
         total = sum(
             Decimal(child.get("value", "0")) for child in node["children"].values()
         )
-
-        node["value"] = total
+        if node["children"]:
+            node["value"] = total  # Only recalculate if children exist
 
         for child in node["children"].values():
             if total > 0:
@@ -103,7 +103,8 @@ def update_children(portfolio: dict, parsed: dict) -> dict:
     for name, meta in parsed.items():
         try:
             _type = meta["type"]
-            _value = float(meta["value"])
+            # _value = float(meta["value"])
+            _value = Decimal(str(meta["value"]))
             children[name] = {"type": _type, "value": _value}
         except (KeyError, TypeError, ValueError):
             logger.warning(f"Skipping malformed slice: {name} -> {meta}")
