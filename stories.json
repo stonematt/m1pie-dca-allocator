@@ -128,5 +128,16 @@
       "If data exceeds cookie limits, fallback gracefully with a user-visible warning.",
       "Data is stored only client-side, ensuring user privacy and no server-side persistence."
     ]
+  },
+  {
+    "title": "Add Support Link for Donations",
+    "description": "Allow users to support development via a donation link (e.g., Buy Me a Coffee or Ko-fi).",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "A support/donation button or link is visible in the sidebar or footer.",
+      "Clicking the link opens a new tab to a configured donation platform.",
+      "The integration uses a privacy-respecting service (e.g., Buy Me a Coffee, Ko-fi, Stripe Tip Jar).",
+      "The link or handle is configurable in code or via environment variable."
+    ]
   }
 ]
