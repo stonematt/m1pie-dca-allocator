@@ -2,6 +2,7 @@ import pytest
 import json
 import zlib
 import base64
+import os
 
 from scripts.cookie_account import save_account_to_cookie, load_account_from_cookie
 from scripts.account import create_empty_account
@@ -19,7 +20,9 @@ def test_save_account_to_cookie_success(mocker, sample_account):
 
 
 def test_save_account_oversize(mocker):
-    big_account = {"portfolios": {"x": "a" * 10000}}
+    # Use incompressible data to exceed cookie limit after compression
+    noisy = os.urandom(6000).hex()
+    big_account = {"portfolios": {"x": noisy}}
     mock_set = mocker.patch("scripts.cookie_account.set_cookie")
     save_account_to_cookie(big_account)
     mock_set.assert_not_called()
