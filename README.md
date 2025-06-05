@@ -134,5 +134,6 @@ pip install -r requirements.txt
 ## 🧠 Author & License
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z41G13PX)
+
 Maintained by [@stonematt](https://github.com/stonematt)  
 Licensed under the MIT License
