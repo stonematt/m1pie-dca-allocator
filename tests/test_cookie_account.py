@@ -1,60 +1,46 @@
-"""
-test_cookie_account.py: Unit tests for cookie_account.py browser persistence logic.
-
-Mocks Streamlit's query_params API to validate saving, loading, and clearing
-account data from browser storage.
-"""
-
 import pytest
-import streamlit as st
-from types import SimpleNamespace
+import json
+import zlib
+import base64
 
-from scripts.account import add_or_replace_portfolio, create_empty_account
-from scripts.cookie_account import (
-    clear_account_cookie,
-    load_account_from_cookie,
-    save_account_to_cookie,
-)
-
-COOKIE_KEY = "m1pie_account"
+from scripts.cookie_account import save_account_to_cookie, load_account_from_cookie
+from scripts.account import create_empty_account
 
 
-@pytest.fixture(autouse=True)
-def mock_query_params(monkeypatch):
-    """Patch Streamlit's query_params property using a backing store."""
-    store = {}
-
-    class QueryParamsMock:
-        @property
-        def query_params(self):
-            return store
-
-        @query_params.setter
-        def query_params(self, value):
-            store.clear()
-            store.update(value)
-
-    monkeypatch.setattr(st, "query_params", QueryParamsMock().query_params)
-    return store
+@pytest.fixture
+def sample_account():
+    return {"type": "account", "portfolios": {"foo": {"type": "pie", "value": 100}}}
 
 
-def test_save_and_load_account(mock_query_params):
-    account = create_empty_account()
-    add_or_replace_portfolio(account, "demo", {"name": "demo", "value": 100})
-    save_account_to_cookie(account)
-
-    assert COOKIE_KEY in mock_query_params
-    loaded = load_account_from_cookie()
-    assert loaded is not None
-    assert loaded["portfolios"]["demo"]["value"] == 100
+def test_save_account_to_cookie_success(mocker, sample_account):
+    mock_set = mocker.patch("scripts.cookie_account.set_cookie")
+    save_account_to_cookie(sample_account)
+    mock_set.assert_called_once()
 
 
-def test_clear_cookie(mock_query_params):
-    account = create_empty_account()
-    add_or_replace_portfolio(account, "demo", {"name": "demo", "value": 100})
-    save_account_to_cookie(account)
+def test_save_account_oversize(mocker):
+    big_account = {"portfolios": {"x": "a" * 10000}}
+    mock_set = mocker.patch("scripts.cookie_account.set_cookie")
+    save_account_to_cookie(big_account)
+    mock_set.assert_not_called()
 
-    assert COOKIE_KEY in mock_query_params
-    clear_account_cookie()
-    assert COOKIE_KEY not in mock_query_params
-    assert load_account_from_cookie() is None
+
+def test_load_account_success(mocker, sample_account):
+    encoded = base64.b64encode(
+        zlib.compress(json.dumps(sample_account).encode())
+    ).decode()
+    mocker.patch("scripts.cookie_account.get_cookie", return_value=encoded)
+    result = load_account_from_cookie()
+    assert result == sample_account
+
+
+def test_load_account_missing_cookie(mocker):
+    mocker.patch("scripts.cookie_account.get_cookie", return_value=None)
+    result = load_account_from_cookie()
+    assert result == create_empty_account()
+
+
+def test_load_account_corrupt_cookie(mocker):
+    mocker.patch("scripts.cookie_account.get_cookie", return_value="not-valid-base64")
+    result = load_account_from_cookie()
+    assert result == create_empty_account()

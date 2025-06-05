@@ -1,50 +1,63 @@
 """
-cookie_account.py: Manage lightweight account persistence via browser cookies.
+cookie_account.py: Cookie-based persistence for account data.
 
-Serializes the entire account object into a compact JSON string and stores it
-in a browser cookie using Streamlit's experimental query param API. Enables
-basic persistence without requiring server-side storage or authentication.
+Handles compression and privacy-respecting storage via real browser cookies.
 """
 
 import json
-import streamlit as st
+import base64
+import zlib
 
+from scripts.cookie_manager import get_cookie, set_cookie
 from scripts.account import create_empty_account
 from scripts.log_util import app_logger
 
 logger = app_logger(__name__)
 
-COOKIE_KEY = "m1_account"
+COOKIE_KEY = "m1pie_account"
+COOKIE_LIMIT_BYTES = 4096
 
 
 def save_account_to_cookie(account: dict) -> None:
-    """Serialize and store the full account structure in the cookie."""
+    """
+    Compress and store account data in a browser cookie.
+
+    :param account: Account dictionary to persist.
+    """
     try:
-        json_data = json.dumps(account, separators=(",", ":"))
-        st.experimental_set_query_params(**{COOKIE_KEY: json_data})
+        raw_json = json.dumps(account, separators=(",", ":"))
+        compressed = zlib.compress(raw_json.encode())
+        encoded = base64.b64encode(compressed).decode()
+
+        if len(encoded) > COOKIE_LIMIT_BYTES:
+            logger.warning("Cookie size exceeds 4KB, not saving.")
+            return
+
+        set_cookie(COOKIE_KEY, encoded)
         logger.info("Account saved to cookie.")
+
     except Exception as e:
         logger.error(f"Failed to save account to cookie: {e}")
 
 
 def load_account_from_cookie() -> dict:
-    """Attempt to load and deserialize the account structure from cookie."""
-    try:
-        params = st.experimental_get_query_params()
-        raw = params.get(COOKIE_KEY)
-        if raw:
-            account = json.loads(raw[0])
-            logger.info("Account loaded from cookie.")
-            return account
-    except Exception as e:
-        logger.error(f"Failed to load account from cookie: {e}")
-    return create_empty_account()
+    """
+    Load and decompress account data from a browser cookie.
 
-
-def clear_account_cookie() -> None:
-    """Clear the account cookie by removing the query param."""
+    :return: Account dictionary or a new empty account if missing/invalid.
+    """
     try:
-        st.experimental_set_query_params(**{COOKIE_KEY: None})
-        logger.info("Account cookie cleared.")
+        encoded = get_cookie(COOKIE_KEY)
+        if not encoded:
+            return create_empty_account()
+
+        compressed = base64.b64decode(encoded)
+        raw_json = zlib.decompress(compressed).decode()
+        data = json.loads(raw_json)
+
+        logger.info("Account loaded from cookie.")
+        return data
+
     except Exception as e:
-        logger.error(f"Failed to clear account cookie: {e}")
+        logger.warning(f"Failed to load account from cookie: {e}")
+        return create_empty_account()
