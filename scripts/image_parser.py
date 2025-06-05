@@ -6,7 +6,6 @@ tickers and sub-pies. Encodes uploaded files to base64 PNG format for transmissi
 """
 
 import json
-import os
 import re
 from base64 import b64encode
 from datetime import datetime
@@ -16,8 +15,10 @@ import openai
 import streamlit as st
 from PIL import Image
 
+from scripts.account import add_or_replace_portfolio
+from scripts.cookie_account import save_account_to_cookie
 from scripts.log_util import app_logger
-from scripts.portfolio import normalize_portfolio, save_portfolio, update_children
+from scripts.portfolio import normalize_portfolio, update_children
 from scripts.utils import file_hash
 
 logger = app_logger(__name__)
@@ -93,17 +94,13 @@ def _clean_and_parse_response(raw: str) -> dict:
         raise ValueError("Failed to parse JSON from GPT response") from e
 
 
-def handle_image_upload(
-    img_file, reparse, portfolio, portfolio_file, data_dir, api_key
-):
+def handle_image_upload(img_file, reparse, portfolio, api_key):
     """
     Handle full image upload lifecycle: hashing, parsing, updating, persisting.
 
     :param img_file: Uploaded image file
     :param reparse: Force reprocessing of cached image
     :param portfolio: Current in-memory portfolio dict
-    :param portfolio_file: Portfolio filename
-    :param data_dir: Storage directory for JSON
     :param api_key: OpenAI API key
     """
     current_hash = _get_image_hash(img_file)
@@ -125,7 +122,19 @@ def handle_image_upload(
         return
 
     if parsed and not st.session_state.get("image_processed"):
-        _apply_parsed_to_portfolio(portfolio, parsed, portfolio_file, data_dir)
+        updated = update_children(portfolio, parsed)
+        normalized = normalize_portfolio(updated)
+        st.session_state["portfolio"] = normalized
+
+        name = st.session_state.get("portfolio_file", normalized["name"])
+        st.session_state["account"] = add_or_replace_portfolio(
+            st.session_state["account"], name, normalized
+        )
+        save_account_to_cookie(st.session_state["account"])
+
+        st.session_state["image_processed"] = True
+        st.success(f"Added/updated {len(parsed)} slices.")
+        st.rerun()
 
 
 def _get_image_hash(file) -> str:
@@ -152,7 +161,6 @@ def _parse_and_cache_image(file, current_hash, api_key, reparse=False) -> dict:
     """
     if reparse or current_hash not in st.session_state["parsed_images"]:
         file.seek(0)
-        # parsed = extract_hybrid_slices_from_image(file, api_key)
         raw = extract_hybrid_slices_from_image(file, api_key)
         parsed = clean_parsed_slices(raw)
         if not isinstance(parsed, dict) or not all(
@@ -170,29 +178,6 @@ def _parse_and_cache_image(file, current_hash, api_key, reparse=False) -> dict:
     return parsed
 
 
-def _apply_parsed_to_portfolio(portfolio, parsed, portfolio_file, data_dir):
-    """
-    Update the current portfolio with parsed data and persist it.
-
-    :param portfolio: Current portfolio dict
-    :param parsed: Parsed JSON children
-    :param portfolio_file: Portfolio file name
-    :param data_dir: Directory for file save
-    """
-    save_path = os.path.join(data_dir, portfolio_file)
-    if not os.path.exists(save_path):
-        logger.warning(f"Portfolio file missing: {portfolio_file}")
-        st.warning("Portfolio file not found. Please create or reload the portfolio.")
-        return
-    updated = update_children(portfolio, parsed)
-    save_portfolio(updated, save_path)
-    st.session_state["portfolio"] = normalize_portfolio(updated)
-    st.session_state["image_processed"] = True
-    # st.session_state["reparse"] = False  # Uncheck force re-parse
-    st.success(f"Added/updated {len(parsed)} slices.")
-    st.rerun()
-
-
 def clean_parsed_slices(raw_slices: dict) -> dict:
     """
     Ensure all parsed slices from GPT include a valid 'type' field ('ticker' or 'pie').
@@ -202,7 +187,7 @@ def clean_parsed_slices(raw_slices: dict) -> dict:
     """
     cleaned = {}
     for key, val in raw_slices.items():
-        entry_type = val.get("type", "ticker")  # default to 'ticker'
+        entry_type = val.get("type", "ticker")
         if entry_type not in {"ticker", "pie"}:
             logger.warning(f"Unknown slice type for '{key}': {entry_type}, skipping.")
             continue
