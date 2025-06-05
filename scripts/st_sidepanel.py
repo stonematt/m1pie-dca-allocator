@@ -9,7 +9,7 @@ from scripts.account import (
     get_portfolio,
 )
 from scripts.cookie_account import load_account_from_cookie, save_account_to_cookie
-from scripts.portfolio import normalize_portfolio
+from scripts.portfolio import normalize_portfolio, create_and_save
 from scripts.log_util import app_logger, set_log_level
 
 logger = app_logger(__name__)
@@ -71,16 +71,6 @@ def render_sidepanel():
 
         st.divider()
         st.header("➕ New Portfolio")
-
-        def create_and_save():
-            name = st.session_state["new_portfolio_name"].strip()
-            if name:
-                empty = {"name": name, "type": "pie", "children": {}, "value": 0}
-                st.session_state["account"] = add_or_replace_portfolio(
-                    st.session_state["account"], name, empty
-                )
-                save_account_to_cookie(st.session_state["account"])
-                st.rerun()
 
         st.text_input(
             "New Portfolio Name",
