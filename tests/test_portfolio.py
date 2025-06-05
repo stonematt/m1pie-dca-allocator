@@ -1,17 +1,22 @@
-import json
-import os
-import tempfile
 from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
+import streamlit as st
 
 from scripts.portfolio import (
-    list_portfolios,
-    load_portfolio,
     normalize_portfolio,
-    save_portfolio,
     update_children,
 )
+
+
+@pytest.fixture(autouse=True)
+def init_streamlit_session(monkeypatch):
+    monkeypatch.setitem(st.session_state, "account", {"portfolios": {}})
+    monkeypatch.setitem(
+        st.session_state,
+        "portfolio",
+        {"name": "test", "type": "pie", "value": 0, "children": {}},
+    )
 
 
 @pytest.fixture
@@ -85,39 +90,3 @@ def test_update_children_accepts_parsed_image_data(base_portfolio):
     updated = update_children(base_portfolio, parsed)
     assert updated["children"]["FRB23Q1"]["value"] == 1845.07
     assert updated["children"]["FB25-4"]["type"] == "pie"
-
-
-def test_save_and_load_portfolio_consistency():
-    """Test that saving and reloading a portfolio yields the same data."""
-    with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, "portfolio.json")
-        data = {"name": "demo", "type": "pie", "value": 0, "children": {}}
-        save_portfolio(data, path)
-        loaded = load_portfolio(path)
-        assert data == loaded
-
-
-def test_list_portfolios_filters_json():
-    """Ensure that only .json files are returned from a directory."""
-    with tempfile.TemporaryDirectory() as tmp:
-        paths = ["a.json", "b.json", "c.txt"]
-        for name in paths:
-            with open(os.path.join(tmp, name), "w") as f:
-                f.write("{}")
-        files = list_portfolios(tmp)
-        assert set(files) == {"a.json", "b.json"}
-
-
-def test_save_portfolio_with_decimals(base_portfolio, tmp_path):
-    """Ensure save_portfolio correctly serializes Decimal values."""
-    # Normalize to inject Decimal weights
-    normalized = normalize_portfolio(base_portfolio)
-    path = tmp_path / "portfolio.json"
-
-    save_portfolio(normalized, str(path))
-
-    with open(path) as f:
-        data = json.load(f)
-    assert data["children"]["A"]["weight"] == float(
-        normalized["children"]["A"]["weight"]
-    )
