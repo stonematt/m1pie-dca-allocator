@@ -88,5 +88,5 @@ def test_update_children_accepts_parsed_image_data(base_portfolio):
         "FB25-4": {"type": "pie", "value": 307.36},
     }
     updated = update_children(base_portfolio, parsed)
-    assert updated["children"]["FRB23Q1"]["value"] == 1845.07
+    assert updated["children"]["FRB23Q1"]["value"] == Decimal("1845.07")
     assert updated["children"]["FB25-4"]["type"] == "pie"
