@@ -5,6 +5,11 @@ Provides CRUD operations to manage named portfolios inside a top-level account s
 Intended to support cookie and JSON storage layers.
 """
 
+from scripts.log_util import app_logger
+
+logger = app_logger(__name__)
+
+
 ACCOUNT_TEMPLATE = {"type": "account", "portfolios": {}}
 
 
@@ -31,6 +36,11 @@ def get_portfolio(account: dict, name: str) -> dict:
 
 def delete_portfolio(account: dict, name: str) -> dict:
     """Delete a portfolio by name."""
-    if name in account.get("portfolios", {}):
-        del account["portfolios"][name]
+    portfolios = account.get("portfolios", {})
+    if name not in portfolios:
+        logger.warning(f"Attempted to delete non-existent portfolio: {name}")
+        return account
+
+    del portfolios[name]
+    logger.info(f"Portfolio '{name}' deleted.")
     return account
