@@ -18,15 +18,15 @@ def list_portfolios(account: dict) -> list[str]:
     return list(account.get("portfolios", {}).keys())
 
 
-def get_portfolio(account: dict, name: str) -> dict:
-    """Retrieve a portfolio by name."""
-    return account.get("portfolios", {}).get(name)
-
-
 def add_or_replace_portfolio(account: dict, name: str, portfolio: dict) -> dict:
     """Insert or replace a portfolio in the account."""
     account.setdefault("portfolios", {})[name] = portfolio
     return account
+
+
+def get_portfolio(account: dict, name: str) -> dict:
+    """Retrieve a portfolio by name."""
+    return account.get("portfolios", {}).get(name)
 
 
 def delete_portfolio(account: dict, name: str) -> dict:
