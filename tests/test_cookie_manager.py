@@ -30,5 +30,6 @@ def test_set_cookie_calls_manager(mocker):
     expires_at = kwargs["expires_at"]
     assert isinstance(expires_at, datetime)
     assert expires_at.tzinfo == timezone.utc
-    assert expires_at > datetime.now(timezone.utc)
-    assert expires_at < datetime.now(timezone.utc) + timedelta(days=365)
+    current_time = datetime.now(timezone.utc)
+    assert expires_at > current_time
+    assert expires_at < current_time + timedelta(days=365)
