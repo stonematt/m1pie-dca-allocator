@@ -180,7 +180,7 @@
   {
     "title": "Add Button to Generate Example Portfolio",
     "description": "Add a button to the sidebar to generate a predefined 3-level nested test portfolio for debugging, development, and Sankey diagram validation.",
-    "status": "not_started",
+    "status": "in_progress",
     "acceptance_criteria": [
       "A button labeled \"make example portfolio\" appears in the sidebar UI.",
       "When clicked, replaces the current portfolio in session state with the generated test portfolio.",
