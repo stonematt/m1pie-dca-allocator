@@ -3,14 +3,17 @@
 import streamlit as st
 
 from scripts.account import (
-    add_or_replace_portfolio,
     delete_portfolio,
-    list_portfolios,
     get_portfolio,
+    list_portfolios,
 )
 from scripts.cookie_account import load_account_from_cookie, save_account_to_cookie
-from scripts.portfolio import normalize_portfolio, create_and_save
 from scripts.log_util import app_logger, set_log_level
+from scripts.portfolio import (
+    create_and_save,
+    make_example_portfolio,
+    normalize_portfolio,
+)
 
 logger = app_logger(__name__)
 
@@ -78,6 +81,9 @@ def render_sidepanel():
             key="new_portfolio_name",
             on_change=create_and_save,
         )
+
+        if st.button("Make Example Portfolio"):
+            make_example_portfolio()
 
         st.divider()
         st.header("🛠️ Settings")
