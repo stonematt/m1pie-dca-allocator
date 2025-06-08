@@ -1,8 +1,22 @@
 """
-account.py: Manage an account composed of multiple portfolios.
+account.py: Portfolio Management for User Accounts
 
-Provides CRUD operations to manage named portfolios inside a top-level account structure.
-Intended to support cookie and JSON storage layers.
+This module manages user accounts comprised of multiple named investment portfolios.
+It provides essential CRUD operations to facilitate the creation, retrieval, updating,
+and deletion of portfolios within an account. The module is designed to support both
+cookie-based and JSON file storage solutions, ensuring flexibility in how account
+data is persisted. Logging is integrated to track and debug portfolio operations
+efficiently.
+
+Functions:
+- create_empty_account: Initializes a new account with no portfolios.
+- list_portfolios: Lists all portfolio names within an account.
+- add_or_replace_portfolio: Adds a new portfolio or updates an existing one.
+- get_portfolio: Retrieves details of a specified portfolio.
+- delete_portfolio: Removes a portfolio from the account.
+
+Usage of this module assumes integration with a logging utility and a storage layer
+for account persistence.
 """
 
 from scripts.log_util import app_logger
