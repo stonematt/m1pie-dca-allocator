@@ -176,5 +176,20 @@
       "Disable image parsing components (e.g., upload/parse button).",
       "Warning includes instructions on how to fix."
     ]
+  },
+  {
+    "title": "Add Button to Generate Example Portfolio",
+    "description": "Add a button to the sidebar to generate a predefined 3-level nested test portfolio for debugging, development, and Sankey diagram validation.",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "A button labeled \"make example portfolio\" appears in the sidebar UI.",
+      "When clicked, replaces the current portfolio in session state with the generated test portfolio.",
+      "Generated portfolio includes 3-level hierarchy (pie → pie → ticker).",
+      "New portfolio appears as the loaded portfolio with name set to \"example\".",
+      "Can be used as input to Sankey diagram logic.",
+      "Safe to call multiple times (replaces previous portfolio cleanly).",
+      "Logged as a system-generated portfolio creation event.",
+      "Uses existing portfolio management functions so it is saved and switchable like any user-created portfolio."
+    ]
   }
 ]
