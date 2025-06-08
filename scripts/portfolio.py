@@ -9,9 +9,10 @@ from typing import Any, Dict
 import pandas as pd
 import streamlit as st
 
-from scripts.log_util import app_logger
 from scripts.account import add_or_replace_portfolio
 from scripts.cookie_account import save_account_to_cookie
+from scripts.log_util import app_logger
+from scripts.sample_portfolios import EXAMPLE_PORTFOLIO
 
 logger = app_logger(__name__)
 
@@ -157,3 +158,17 @@ def create_and_save():
         )
         st.session_state["new_portfolio_name"] = ""  # Clear input
         st.rerun()
+
+
+def make_example_portfolio():
+    """
+    Generate a predefined 3-level nested portfolio for development/debugging.
+
+    :return: None
+    """
+    account = st.session_state["account"]
+    updated = add_or_replace_portfolio(account, "example", EXAMPLE_PORTFOLIO)
+    st.session_state["account"] = updated
+    st.session_state["active_portfolio_name"] = "example"
+    save_account_to_cookie(updated)
+    logger.info("System-generated portfolio creation: 'example'")

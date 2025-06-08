@@ -4,9 +4,11 @@ import pytest
 import streamlit as st
 
 from scripts.portfolio import (
+    make_example_portfolio,
     normalize_portfolio,
     update_children,
 )
+from scripts.sample_portfolios import EXAMPLE_PORTFOLIO
 
 
 @pytest.fixture(autouse=True)
@@ -90,3 +92,10 @@ def test_update_children_accepts_parsed_image_data(base_portfolio):
     updated = update_children(base_portfolio, parsed)
     assert updated["children"]["FRB23Q1"]["value"] == Decimal("1845.07")
     assert updated["children"]["FB25-4"]["type"] == "pie"
+
+
+def test_make_example_portfolio_sets_expected_data():
+    make_example_portfolio()
+    assert st.session_state["active_portfolio_name"] == "example"
+    saved = st.session_state["account"]["portfolios"]["example"]
+    assert saved == EXAMPLE_PORTFOLIO
