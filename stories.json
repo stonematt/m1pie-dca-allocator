@@ -139,5 +139,42 @@
       "The integration uses a privacy-respecting service (e.g., Buy Me a Coffee, Ko-fi, Stripe Tip Jar).",
       "The link or handle is configurable in code or via environment variable."
     ]
+  },
+  {
+    "title": "Visualize DCA Impact with Sankey Diagram",
+    "description": "Use a Sankey diagram to show how new capital from DCA input is distributed from source to pies and tickers. This enables users to intuitively grasp the allocation path and resulting impact.",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "Sankey shows flow from new capital → pies/tickers.",
+      "Width of flow lines corresponds to allocation amount.",
+      "Nodes are labeled with ticker/pie names and dollar values.",
+      "Matches calculated DCA outputs exactly.",
+      "Displays side-by-side with current pie chart (toggle or tab)."
+    ]
+  },
+  {
+    "title": "Visualize Portfolio Structure as Sankey Diagram",
+    "description": "Add a new visualization option that uses a Sankey diagram to depict the nested pie → ticker structure, improving visibility into the full recursive allocation hierarchy. There is currently no visualization for this structure.",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "Root node is the top-level pie (e.g., \"main\").",
+      "Intermediate nodes represent nested pies.",
+      "Leaf nodes represent tickers.",
+      "Any pie may contain a mix of tickers or pies.",
+      "Flow width proportional to value held.",
+      "Each node includes the name (no hover required).",
+      "Mouseover or tap interaction shows ticker symbol and value."
+    ]
+  },
+  {
+    "title": "Warn if OpenAI API Key is Missing",
+    "description": "Ensure the application gracefully handles the case where the OpenAI key is not set in `.streamlit/secrets.toml`. Display a user-facing warning and disable parsing functionality.",
+    "status": "not_started",
+    "acceptance_criteria": [
+      "On app start, check for presence of `secrets[\"openai\"][\"api_key\"]`.",
+      "If missing, show a clear warning in the UI.",
+      "Disable image parsing components (e.g., upload/parse button).",
+      "Warning includes instructions on how to fix."
+    ]
   }
 ]
