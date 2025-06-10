@@ -155,7 +155,7 @@
   {
     "title": "Visualize Portfolio Structure as Sankey Diagram",
     "description": "Add a new visualization option that uses a Sankey diagram to depict the nested pie → ticker structure, improving visibility into the full recursive allocation hierarchy. There is currently no visualization for this structure.",
-    "status": "not_started",
+    "status": "in_progress",
     "acceptance_criteria": [
       "Root node is the top-level pie (e.g., \"main\").",
       "Intermediate nodes represent nested pies.",
@@ -180,7 +180,7 @@
   {
     "title": "Add Button to Generate Example Portfolio",
     "description": "Add a button to the sidebar to generate a predefined 3-level nested test portfolio for debugging, development, and Sankey diagram validation.",
-    "status": "in_progress",
+    "status": "complete",
     "acceptance_criteria": [
       "A button labeled \"make example portfolio\" appears in the sidebar UI.",
       "When clicked, replaces the current portfolio in session state with the generated test portfolio.",
