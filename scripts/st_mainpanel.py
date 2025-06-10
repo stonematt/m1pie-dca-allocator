@@ -4,15 +4,16 @@ from decimal import Decimal
 
 import streamlit as st
 
+from scripts.account import add_or_replace_portfolio
+from scripts.cookie_account import save_account_to_cookie
 from scripts.dca_allocator import recalculate_pie_allocation
 from scripts.image_parser import handle_image_upload
 from scripts.log_util import app_logger
 from scripts.portfolio import format_portfolio_table, normalize_portfolio
-from scripts.cookie_account import save_account_to_cookie
-from scripts.account import add_or_replace_portfolio
 from scripts.st_utils import (
     render_allocation_comparison_charts,
     render_allocation_review_table,
+    render_sankey_diagram,
 )
 
 logger = app_logger(__name__)
@@ -32,13 +33,18 @@ def render_mainpanel():
     portfolio = st.session_state["portfolio"]
 
     st.subheader(f"Loaded Portfolio: {portfolio['name']}")
-    st.subheader(f"Total Value: ${portfolio['value']:.2f}")
 
-    if portfolio.get("children"):
-        df = format_portfolio_table(portfolio)
-        st.table(df)
-    else:
-        st.info("This portfolio has no children.")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader(f"Total Value: ${portfolio['value']:.2f}")
+        if portfolio.get("children"):
+            df = format_portfolio_table(portfolio)
+            st.table(df)
+        else:
+            st.info("This portfolio has no children.")
+
+    with col2:
+        render_sankey_diagram(portfolio) if portfolio else None
 
     st.divider()
 
