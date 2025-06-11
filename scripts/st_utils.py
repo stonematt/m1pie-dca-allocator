@@ -147,6 +147,7 @@ def render_sankey_diagram(portfolio: dict) -> None:
     max_depth = max(1, max(positions.values(), default=0))
     x_pos = [positions.get(name, 0) / max_depth for name in label]
     y_pos = [i / len(label) for i in range(len(label))]
+    height = max(400, len(label) * 35)
 
     palette = qualitative.Set2
     color_map = {name: palette[i % len(palette)] for i, name in enumerate(label)}
@@ -179,6 +180,6 @@ def render_sankey_diagram(portfolio: dict) -> None:
         # title_text=portfolio["name"],
         # font=dict(size=10, family="Arial", color="black"),
         font=dict(family="Segoe UI, Arial, sans-serif", size=10, color="black"),
-        height=600,
+        height=height,
     )
     st.plotly_chart(fig, use_container_width=True)
