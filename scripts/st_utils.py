@@ -109,14 +109,11 @@ def render_allocation_comparison_charts(original: dict, adjusted: dict) -> None:
 def render_sankey_diagram(portfolio: dict) -> None:
     """
     Render a Sankey diagram showing the structure of the portfolio.
-
     :param portfolio: Portfolio dictionary with nested pies and tickers
     """
-
     if not portfolio.get("children"):
         st.info("This portfolio has no children to visualize.")
         return
-
     node_map = {}
     links = []
     positions = {}
@@ -147,6 +144,7 @@ def render_sankey_diagram(portfolio: dict) -> None:
     max_depth = max(1, max(positions.values(), default=0))
     x_pos = [positions.get(name, 0) / max_depth for name in label]
     y_pos = [i / len(label) for i in range(len(label))]
+
     height = max(400, len(label) * 35)
 
     palette = qualitative.Set2
@@ -161,7 +159,9 @@ def render_sankey_diagram(portfolio: dict) -> None:
                 node=dict(
                     pad=20,
                     thickness=30,
-                    line=dict(color="rgba(0,0,0,0)", width=0),
+                    line=dict(
+                        color="rgba(0,0,0,0.1)", width=1
+                    ),  # Subtle border for better definition
                     label=label,
                     x=x_pos,
                     y=y_pos,
@@ -176,10 +176,28 @@ def render_sankey_diagram(portfolio: dict) -> None:
             )
         ]
     )
+
+    # Improved font settings for better readability
     fig.update_layout(
-        # title_text=portfolio["name"],
-        # font=dict(size=10, family="Arial", color="black"),
-        font=dict(family="Segoe UI, Arial, sans-serif", size=10, color="black"),
+        font=dict(
+            family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+            size=12,  # Increased from 10
+            color="#2c3e50",  # Darker color for better contrast
+        ),
         height=height,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        margin=dict(l=20, r=20, t=20, b=20),  # Better margins
     )
+
+    # Additional font customization specifically for the Sankey node labels
+    fig.update_traces(
+        textfont=dict(
+            family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+            size=12,
+            color="#2c3e50",
+        ),
+        selector=dict(type="sankey"),
+    )
+
     st.plotly_chart(fig, use_container_width=True)
