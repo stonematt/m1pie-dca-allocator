@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 EXAMPLE_PORTFOLIO = {
-    "name": "example",
+    "name": "Roshar",
     "type": "pie",
     "value": Decimal("3009.3"),
     "children": {

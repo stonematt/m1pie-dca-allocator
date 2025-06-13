@@ -1,18 +1,20 @@
 """st_mainpanel.py: Streamlit main panel using cookie-backed portfolio storage."""
 
+from copy import deepcopy
 from decimal import Decimal
 
 import streamlit as st
 
+from scripts.account import add_or_replace_portfolio
+from scripts.cookie_account import save_account_to_cookie
 from scripts.dca_allocator import recalculate_pie_allocation
 from scripts.image_parser import handle_image_upload
 from scripts.log_util import app_logger
 from scripts.portfolio import format_portfolio_table, normalize_portfolio
-from scripts.cookie_account import save_account_to_cookie
-from scripts.account import add_or_replace_portfolio
 from scripts.st_utils import (
     render_allocation_comparison_charts,
     render_allocation_review_table,
+    render_sankey_diagram,
 )
 
 logger = app_logger(__name__)
@@ -32,13 +34,18 @@ def render_mainpanel():
     portfolio = st.session_state["portfolio"]
 
     st.subheader(f"Loaded Portfolio: {portfolio['name']}")
-    st.subheader(f"Total Value: ${portfolio['value']:.2f}")
 
-    if portfolio.get("children"):
-        df = format_portfolio_table(portfolio)
-        st.table(df)
-    else:
-        st.info("This portfolio has no children.")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader(f"Total Value: ${portfolio['value']:.2f}")
+        if portfolio.get("children"):
+            df = format_portfolio_table(portfolio)
+            st.table(df)
+        else:
+            st.info("This portfolio has no children.")
+
+    with col2:
+        render_sankey_diagram(portfolio) if portfolio else None
 
     st.divider()
 
@@ -71,48 +78,57 @@ def render_mainpanel():
             save_account_to_cookie(st.session_state["account"])
             st.success("Portfolio updated from image.")
 
-    with tab2:
-        st.subheader("Adjust Positions")
+        with tab2:
+            st.subheader("Adjust Positions")
 
-        with st.form("adjust_form"):
-            col1, col2 = st.columns(2)
-            with col1:
-                new_funds = st.number_input("New funds", min_value=0.0, value=500.0)
-            with col2:
-                new_ticker_count = st.number_input("New tickers", min_value=1, value=4)
+            with st.form("adjust_form"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    new_funds = st.number_input("New funds", min_value=0.0, value=500.0)
+                with col2:
+                    new_ticker_count = st.number_input(
+                        "New tickers", min_value=1, value=4
+                    )
 
-            percent_to_new = st.slider("Percent to new", 0, 100, value=80)
-            submit = st.form_submit_button("Recalculate Allocation")
+                percent_to_new = st.slider("Percent to new", 0, 100, value=80)
+                submit = st.form_submit_button("Recalculate Allocation")
 
-        if submit:
-            updated = recalculate_pie_allocation(
-                pie_data=st.session_state["portfolio"],
-                new_funds=Decimal(str(new_funds)),
-                new_ticker_count=new_ticker_count,
-                percent_to_new=Decimal(str(percent_to_new)),
-            )
-            st.session_state["adjusted_portfolio"] = updated
-            st.success("Allocation recalculated.")
-
-            # Auto-save updated allocation
-            st.session_state["portfolio"] = normalize_portfolio(updated)
-            st.session_state["account"] = add_or_replace_portfolio(
-                st.session_state["account"],
-                st.session_state["portfolio_file"],
-                st.session_state["portfolio"],
-            )
-            save_account_to_cookie(st.session_state["account"])
-
-        if "adjusted_portfolio" in st.session_state:
-            st.subheader("Adjusted Allocation Review")
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                render_allocation_review_table(
-                    st.session_state["portfolio"],
-                    st.session_state["adjusted_portfolio"],
+            if submit:
+                original = deepcopy(st.session_state["portfolio"])
+                updated = recalculate_pie_allocation(
+                    pie_data=original,
+                    new_funds=Decimal(str(new_funds)),
+                    new_ticker_count=new_ticker_count,
+                    percent_to_new=Decimal(str(percent_to_new)),
                 )
-            with col2:
-                render_allocation_comparison_charts(
-                    st.session_state["portfolio"],
-                    st.session_state["adjusted_portfolio"],
+                st.session_state["adjusted_portfolio"] = updated
+                st.session_state["original_portfolio"] = (
+                    original  # cache for true before/after
                 )
+                st.success("What-if allocation calculated.")
+
+            if "adjusted_portfolio" in st.session_state:
+                st.subheader("Adjusted Allocation Review")
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    render_allocation_review_table(
+                        st.session_state["original_portfolio"],
+                        st.session_state["adjusted_portfolio"],
+                    )
+                with col2:
+                    render_allocation_comparison_charts(
+                        st.session_state["original_portfolio"],
+                        st.session_state["adjusted_portfolio"],
+                    )
+
+                if st.button("Confirm and Save Changes"):
+                    st.session_state["portfolio"] = normalize_portfolio(
+                        st.session_state["adjusted_portfolio"]
+                    )
+                    st.session_state["account"] = add_or_replace_portfolio(
+                        st.session_state["account"],
+                        st.session_state["portfolio_file"],
+                        st.session_state["portfolio"],
+                    )
+                    save_account_to_cookie(st.session_state["account"])
+                    st.success("Portfolio changes saved.")

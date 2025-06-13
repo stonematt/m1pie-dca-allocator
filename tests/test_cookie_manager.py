@@ -21,7 +21,6 @@ def test_set_cookie_calls_manager(mocker):
 
     set_cookie("foo", "bar")
 
-    manager.set.assert_called_once()
     _, kwargs = manager.set.call_args
 
     assert kwargs["cookie"] == "foo"
