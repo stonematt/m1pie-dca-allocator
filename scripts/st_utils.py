@@ -5,6 +5,8 @@ Contains reusable components for visualizing portfolio adjustments,
 such as allocation review tables comparing current and target states.
 """
 
+from decimal import Decimal, InvalidOperation
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -27,8 +29,16 @@ def render_allocation_review_table(original: dict, adjusted: dict) -> None:
 
     # Build row data comparing current and target state per asset
     for k in adjusted_children:
-        current_val = original_children.get(k, {}).get("value", 0.0)
-        target_val = adjusted_children[k]["value"]
+        try:
+            current_val = Decimal(str(original_children.get(k, {}).get("value", 0.0)))
+        except (TypeError, InvalidOperation):
+            current_val = Decimal("0.0")
+
+        try:
+            target_val = Decimal(str(adjusted_children[k].get("value", 0.0)))
+        except (TypeError, InvalidOperation):
+            target_val = Decimal("0.0")
+
         capital_allocated = target_val - current_val
 
         # Compute weights as whole-number percentages
