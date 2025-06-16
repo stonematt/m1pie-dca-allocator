@@ -14,6 +14,7 @@ from scripts.portfolio import (
     make_example_portfolio,
     normalize_portfolio,
 )
+from scripts.st_utils import render_support_link
 
 logger = app_logger(__name__)
 
@@ -96,3 +97,4 @@ def render_sidepanel():
         )
         set_log_level(log_level)
         st.caption(f"Logger set to {log_level}")
+        render_support_link()
