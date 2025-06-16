@@ -5,8 +5,8 @@ Contains reusable components for visualizing portfolio adjustments,
 such as allocation review tables comparing current and target states.
 """
 
-from decimal import Decimal, InvalidOperation
 import random
+from decimal import Decimal, InvalidOperation
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -219,22 +219,21 @@ def render_sankey_diagram(portfolio: dict) -> None:
 
 
 def render_support_link():
-    """Render a support button linking to Ko-fi or similar.
+    """Render a support button linking to Ko-fi or similar."""
+    if "support_label" not in st.session_state:
+        st.session_state.support_label = random.choice(
+            [
+                "☕ Support on Ko-fi",
+                "💖 Buy me a coffee",
+                "🙏 Tip the dev",
+                "🍩 Donate via Ko-fi",
+                "❤️ Send a thank-you",
+            ]
+        )
 
-    Set the donation URL via .streamlit/secrets.toml:
-    [support]
-    kofi_url = "https://ko-fi.com/yourhandle"
-    """
     kofi_url = st.secrets.get("support", {}).get("kofi_url")
     if kofi_url:
-        labels = [
-            "\u2615 Support on Ko-fi",
-            "\ud83d\udc96 Buy me a coffee",
-            "\ud83d\ude4f Tip the dev",
-            "\ud83c\udf69 Donate via Ko-fi",
-            "\u2764\ufe0f Send a thank-you",
-        ]
-        st.sidebar.link_button(random.choice(labels), kofi_url)
+        st.sidebar.link_button(st.session_state.support_label, kofi_url)
     else:
         logger.warning(
             "No support.kofi_url found in st.secrets; support button not shown."
