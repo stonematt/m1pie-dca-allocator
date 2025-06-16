@@ -6,6 +6,7 @@ allowing users to explore pie and ticker allocations in a collapsible view.
 
 Key Features:
 - Expandable rows for nested pies
+- Inline icons via base64 HTML rendering
 - Leaf rows for tickers with value and weight
 - Sorting, alignment, and structured formatting
 - Logs UI render events for session tracking
