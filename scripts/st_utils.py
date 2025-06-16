@@ -6,11 +6,16 @@ such as allocation review tables comparing current and target states.
 """
 
 from decimal import Decimal, InvalidOperation
+import random
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.colors import qualitative
+
+from scripts.log_util import app_logger
+
+logger = app_logger(__name__)
 
 
 def render_allocation_review_table(original: dict, adjusted: dict) -> None:
@@ -211,3 +216,26 @@ def render_sankey_diagram(portfolio: dict) -> None:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+
+def render_support_link():
+    """Render a support button linking to Ko-fi or similar.
+
+    Set the donation URL via .streamlit/secrets.toml:
+    [support]
+    kofi_url = "https://ko-fi.com/yourhandle"
+    """
+    kofi_url = st.secrets.get("support", {}).get("kofi_url")
+    if kofi_url:
+        labels = [
+            "\u2615 Support on Ko-fi",
+            "\ud83d\udc96 Buy me a coffee",
+            "\ud83d\ude4f Tip the dev",
+            "\ud83c\udf69 Donate via Ko-fi",
+            "\u2764\ufe0f Send a thank-you",
+        ]
+        st.sidebar.link_button(random.choice(labels), kofi_url)
+    else:
+        logger.warning(
+            "No support.kofi_url found in st.secrets; support button not shown."
+        )
