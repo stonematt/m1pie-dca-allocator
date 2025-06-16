@@ -29,7 +29,7 @@ logger = app_logger(__name__)
 def render_portfolio_aggrid():
     """
     Display the portfolio as a collapsible tree table using AgGrid.
-    Uses icon class with JS cellRenderer to inject real DOM for background icons.
+    Uses base64 HTML <img> tags for inline icons.
     """
     logger.info("Rendering portfolio AgGrid view")
     portfolio = st.session_state["portfolio"]
@@ -58,21 +58,30 @@ def render_portfolio_aggrid():
         width=40,
         cellRenderer=JsCode(
             """
-            class IconRenderer {
-                init(params) {
-                    const span = document.createElement('span');
-                    span.className = params.value;
-                    this.eGui = span;
+                class IconRenderer {
+                    init(params) {
+                        if (params.value && params.value.startsWith('data:image')) {
+                            // Handle base64 data URLs
+                            const img = document.createElement('img');
+                            img.src = params.value;
+                            img.width = 20;
+                            img.height = 20;
+                            img.style.display = 'block';
+                            img.style.margin = 'auto';
+                            this.eGui = img;
+                        } else {
+                            // Fallback to text
+                            this.eGui = document.createTextNode(params.value || '?');
+                        }
+                    }
+                    getGui() {
+                        return this.eGui;
+                    }
                 }
-                getGui() {
-                    return this.eGui;
-                }
-            }
-        """
+                """
         ),
-        cellStyle={"textAlign": "center"},
+        cellStyle={"textAlign": "center", "padding": "2px"},
     )
-
     gb.configure_column(
         "value",
         header_name="Value ($)",
@@ -90,6 +99,7 @@ def render_portfolio_aggrid():
         ),
     )
     gb.configure_column("type", header_name="Type", cellStyle={"textAlign": "center"})
+
     gridOptions = gb.build()
 
     AgGrid(
@@ -98,24 +108,4 @@ def render_portfolio_aggrid():
         enable_enterprise_modules=True,
         allow_unsafe_jscode=True,
         fit_columns_on_grid_load=True,
-        custom_css={
-            ".icon-pie": {
-                "display": "inline-block",
-                "background-image": "url(assets/pie_icon_32.png)",
-                "background-size": "contain",
-                "height": "20px",
-                "width": "20px",
-            },
-            ".icon-ticker": {
-                "display": "inline-block",
-                "background-image": "url(assets/ticker_icon_32.png)",
-                "background-size": "contain",
-                "height": "20px",
-                "width": "20px",
-            },
-            ".ag-cell": {
-                "line-height": "24px",
-                "padding": "2px",
-            },
-        },
     )

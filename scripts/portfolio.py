@@ -6,7 +6,7 @@ Handles parsing of canonical JSON format and recursive weight normalization.
 import base64
 import os
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import streamlit as st
 
@@ -130,7 +130,12 @@ def save_current_portfolio():
 def get_icon(asset_type: str, output: str = "markdown") -> str:
     """
     Return icon representation for asset type.
+
+    :param asset_type: 'pie' or 'ticker'
+    :param output: 'markdown', 'html', or 'base64'
+    :return: Formatted string with inline icon or fallback symbol
     """
+    # Get the correct path to assets folder
     base_dir = os.path.dirname(__file__)
     icon_map = {
         "pie": os.path.join(base_dir, "../assets/pie_icon_32.png"),
@@ -140,17 +145,17 @@ def get_icon(asset_type: str, output: str = "markdown") -> str:
 
     path = icon_map.get(asset_type, "")
     if os.path.exists(path):
-        with open(path, "rb") as f:
-            encoded = base64.b64encode(f.read()).decode()
-        if output == "html":
-            return (
-                f"<img src='data:image/png;base64,{encoded}' width='16' height='16' />"
-            )
-        else:
-            return f"![{asset_type}](data:image/png;base64,{encoded})"
-    else:
-        logger.warning(f"Icon file missing for type '{asset_type}': {path}")
-        return fallback.get(asset_type, "?")
+        if output in ("html", "base64"):
+            # For AgGrid, return base64 data URL (not HTML tags)
+            with open(path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode()
+            return f"data:image/png;base64,{encoded}"
+        elif output == "markdown":
+            # For Streamlit tables, use relative path
+            return f"![{asset_type}](assets/{asset_type}_icon_32.png)"
+
+    logger.warning(f"Icon file missing for type '{asset_type}': {path}")
+    return fallback.get(asset_type, "?")
 
 
 def get_icon_markdown(asset_type: str) -> str:
@@ -226,9 +231,8 @@ def make_example_portfolio():
 def get_aggrid_portfolio_rows(portfolio: dict) -> list[dict]:
     """
     Flatten a nested portfolio into tree-structured rows for AgGrid.
-    Adds 'icon' field with class name for CSS-based rendering.
+    Adds 'icon' field as base64 HTML image string for inline rendering.
     """
-    from decimal import Decimal
 
     def recurse(node: dict, parent_path: list[str] = []) -> list[dict]:
         rows = []
@@ -247,7 +251,7 @@ def get_aggrid_portfolio_rows(portfolio: dict) -> list[dict]:
                 "value": float(value),
                 "weight": float(weight),
                 "type": child["type"],
-                "icon": "icon-pie" if child["type"] == "pie" else "icon-ticker",
+                "icon": get_icon(child["type"], output="base64"),
             }
 
             rows.append(row)
