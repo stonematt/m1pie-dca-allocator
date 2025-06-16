@@ -158,27 +158,6 @@ def get_icon(asset_type: str, output: str = "markdown") -> str:
     return fallback.get(asset_type, "?")
 
 
-def get_icon_markdown(asset_type: str) -> str:
-    """
-    Return markdown image string for asset type.
-
-    :param asset_type: 'pie' or 'ticker'
-    :return: Markdown ![](...) for Streamlit table
-    """
-    base_dir = os.path.dirname(__file__)
-    icon_map = {
-        "pie": os.path.join(base_dir, "../assets/pie_icon.png"),
-        "ticker": os.path.join(base_dir, "../assets/ticker_icon.png"),
-    }
-    path = icon_map.get(asset_type, "")
-
-    if os.path.exists(path):
-        return f"![{asset_type}](assets/{asset_type}_icon.png)"
-    else:
-        logger.warning(f"Icon file missing for type '{asset_type}': {path}")
-        return "◔" if asset_type == "pie" else "📈"
-
-
 def create_and_save():
     name = st.session_state["new_portfolio_name"].strip()
     if name:
