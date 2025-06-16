@@ -5,12 +5,17 @@ Contains reusable components for visualizing portfolio adjustments,
 such as allocation review tables comparing current and target states.
 """
 
+import random
 from decimal import Decimal, InvalidOperation
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.colors import qualitative
+
+from scripts.log_util import app_logger
+
+logger = app_logger(__name__)
 
 
 def render_allocation_review_table(original: dict, adjusted: dict) -> None:
@@ -211,3 +216,25 @@ def render_sankey_diagram(portfolio: dict) -> None:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+
+def render_support_link():
+    """Render a support button linking to Ko-fi or similar."""
+    if "support_label" not in st.session_state:
+        st.session_state.support_label = random.choice(
+            [
+                "☕ Support on Ko-fi",
+                "💖 Buy me a coffee",
+                "🙏 Tip the dev",
+                "🍩 Donate via Ko-fi",
+                "❤️ Send a thank-you",
+            ]
+        )
+
+    kofi_url = st.secrets.get("support", {}).get("kofi_url")
+    if kofi_url:
+        st.sidebar.link_button(st.session_state.support_label, kofi_url)
+    else:
+        logger.warning(
+            "No support.kofi_url found in st.secrets; support button not shown."
+        )

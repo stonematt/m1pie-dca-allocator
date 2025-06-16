@@ -8,12 +8,13 @@ from scripts.account import (
     list_portfolios,
 )
 from scripts.cookie_account import load_account_from_cookie, save_account_to_cookie
-from scripts.log_util import app_logger, set_log_level
+from scripts.log_util import app_logger  # , set_log_level -- add this if for ux control
 from scripts.portfolio import (
     create_and_save,
     make_example_portfolio,
     normalize_portfolio,
 )
+from scripts.st_utils import render_support_link
 
 logger = app_logger(__name__)
 
@@ -86,13 +87,18 @@ def render_sidepanel():
             make_example_portfolio()
 
         st.divider()
-        st.header("🛠️ Settings")
 
-        log_level = st.selectbox(
-            "Log Level",
-            options=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-            index=1,
-            key="log_level",
-        )
-        set_log_level(log_level)
-        st.caption(f"Logger set to {log_level}")
+        render_support_link()
+
+        # comment the settions options. this is more of a dev thing...
+        # st.header("🛠️ Settings")
+        #
+        # log_level = st.selectbox(
+        #     "Log Level",
+        #     options=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        #     index=1,
+        #     key="log_level",
+        # )
+        # set_log_level(log_level)
+        # st.caption(f"Logger set to {log_level}")
+        #
