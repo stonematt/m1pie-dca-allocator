@@ -10,7 +10,8 @@ from scripts.cookie_account import save_account_to_cookie
 from scripts.dca_allocator import recalculate_pie_allocation
 from scripts.image_parser import handle_image_upload
 from scripts.log_util import app_logger
-from scripts.portfolio import format_portfolio_table, normalize_portfolio
+from scripts.portfolio import normalize_portfolio
+from scripts.st_aggrid import render_portfolio_aggrid
 from scripts.st_utils import (
     render_allocation_comparison_charts,
     render_allocation_review_table,
@@ -39,8 +40,7 @@ def render_mainpanel():
     with col1:
         st.subheader(f"Total Value: ${portfolio['value']:.2f}")
         if portfolio.get("children"):
-            df = format_portfolio_table(portfolio)
-            st.table(df)
+            render_portfolio_aggrid()
         else:
             st.info("This portfolio has no children.")
 

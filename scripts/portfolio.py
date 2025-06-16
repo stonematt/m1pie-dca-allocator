@@ -3,11 +3,11 @@
 Handles parsing of canonical JSON format and recursive weight normalization.
 """
 
+import base64
 import os
 from decimal import Decimal
 from typing import Any, Dict, List
 
-import pandas as pd
 import streamlit as st
 
 from scripts.account import add_or_replace_portfolio
@@ -127,6 +127,32 @@ def save_current_portfolio():
     save_account_to_cookie(updated)
 
 
+def get_icon(asset_type: str, output: str = "markdown") -> str:
+    """
+    Return icon representation for asset type.
+    """
+    base_dir = os.path.dirname(__file__)
+    icon_map = {
+        "pie": os.path.join(base_dir, "../assets/pie_icon_32.png"),
+        "ticker": os.path.join(base_dir, "../assets/ticker_icon_32.png"),
+    }
+    fallback = {"pie": "◔", "ticker": "📈"}
+
+    path = icon_map.get(asset_type, "")
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode()
+        if output == "html":
+            return (
+                f"<img src='data:image/png;base64,{encoded}' width='16' height='16' />"
+            )
+        else:
+            return f"![{asset_type}](data:image/png;base64,{encoded})"
+    else:
+        logger.warning(f"Icon file missing for type '{asset_type}': {path}")
+        return fallback.get(asset_type, "?")
+
+
 def get_icon_markdown(asset_type: str) -> str:
     """
     Return markdown image string for asset type.
@@ -197,36 +223,37 @@ def make_example_portfolio():
     logger.info("System-generated portfolio creation: 'example'")
 
 
-def get_aggrid_portfolio_rows(portfolio: dict) -> List[Dict[str, Any]]:
+def get_aggrid_portfolio_rows(portfolio: dict) -> list[dict]:
     """
-    Flatten a nested portfolio into rows for AgGrid treeData view.
-    Each row includes a `path` key used by AgGrid to render hierarchy.
+    Flatten a nested portfolio into tree-structured rows for AgGrid.
+    Adds 'icon' field with class name for CSS-based rendering.
     """
+    from decimal import Decimal
 
-    def recurse(
-        node: Dict[str, Any], path: List[str], parent_weight: Decimal = Decimal("1.0")
-    ) -> List[Dict[str, Any]]:
+    def recurse(node: dict, parent_path: list[str] = []) -> list[dict]:
         rows = []
         if node["type"] != "pie":
-            return rows
+            return []
 
         total_value = sum(Decimal(str(c["value"])) for c in node["children"].values())
 
         for name, child in node["children"].items():
             value = Decimal(str(child["value"]))
-            weight = (value / total_value) if total_value > 0 else Decimal("0")
+            weight = (value / total_value) * 100 if total_value > 0 else Decimal("0")
+
             row = {
+                "path": parent_path + [name],
                 "name": name,
                 "value": float(value),
-                "weight": float(weight * parent_weight * 100),
+                "weight": float(weight),
                 "type": child["type"],
-                "path": path + [name],
+                "icon": "icon-pie" if child["type"] == "pie" else "icon-ticker",
             }
+
             rows.append(row)
             if child["type"] == "pie":
-                rows.extend(
-                    recurse(child, path + [name], parent_weight=weight * parent_weight)
-                )
+                rows.extend(recurse(child, row["path"]))
+
         return rows
 
-    return recurse(portfolio, [])  # root name omitted from path
+    return recurse(portfolio)
