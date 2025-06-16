@@ -3,10 +3,11 @@
 Handles parsing of canonical JSON format and recursive weight normalization.
 """
 
+import base64
+import os
 from decimal import Decimal
 from typing import Any, Dict
 
-import pandas as pd
 import streamlit as st
 
 from scripts.account import add_or_replace_portfolio
@@ -126,28 +127,35 @@ def save_current_portfolio():
     save_account_to_cookie(updated)
 
 
-def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
+def get_icon(asset_type: str, output: str = "markdown") -> str:
     """
-    Format portfolio children into a display-ready table.
+    Return icon representation for asset type.
 
-    :param portfolio: Portfolio root node.
-    :return: DataFrame with icon, name, value, and weight.
+    :param asset_type: 'pie' or 'ticker'
+    :param output: 'markdown', 'html', or 'base64'
+    :return: Formatted string with inline icon or fallback symbol
     """
-    rows = []
-    children = portfolio.get("children", {})
-    for name, child in children.items():
-        icon = "◔" if child["type"] == "pie" else "📈"
-        value = float(child["value"])
-        weight = float(child["weight"]) * 100
-        rows.append(
-            {
-                " ": icon,
-                "Name": name,
-                "Value": f"${value:,.2f}",
-                "Weight": f"{weight:.1f}%",
-            }
-        )
-    return pd.DataFrame(rows)
+    # Get the correct path to assets folder
+    base_dir = os.path.dirname(__file__)
+    icon_map = {
+        "pie": os.path.join(base_dir, "../assets/pie_icon_32.png"),
+        "ticker": os.path.join(base_dir, "../assets/ticker_icon_32.png"),
+    }
+    fallback = {"pie": "◔", "ticker": "📈"}
+
+    path = icon_map.get(asset_type, "")
+    if os.path.exists(path):
+        if output in ("html", "base64"):
+            # For AgGrid, return base64 data URL (not HTML tags)
+            with open(path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode()
+            return f"data:image/png;base64,{encoded}"
+        elif output == "markdown":
+            # For Streamlit tables, use relative path
+            return f"![{asset_type}](assets/{asset_type}_icon_32.png)"
+
+    logger.warning(f"Icon file missing for type '{asset_type}': {path}")
+    return fallback.get(asset_type, "?")
 
 
 def create_and_save():
@@ -172,3 +180,38 @@ def make_example_portfolio():
     st.session_state["active_portfolio_name"] = "example"
     save_account_to_cookie(updated)
     logger.info("System-generated portfolio creation: 'example'")
+
+
+def get_aggrid_portfolio_rows(portfolio: dict) -> list[dict]:
+    """
+    Flatten a nested portfolio into tree-structured rows for AgGrid.
+    Adds 'icon' field as base64 HTML image string for inline rendering.
+    """
+
+    def recurse(node: dict, parent_path: list[str] = []) -> list[dict]:
+        rows = []
+        if node["type"] != "pie":
+            return []
+
+        total_value = sum(Decimal(str(c["value"])) for c in node["children"].values())
+
+        for name, child in node["children"].items():
+            value = Decimal(str(child["value"]))
+            weight = (value / total_value) * 100 if total_value > 0 else Decimal("0")
+
+            row = {
+                "path": parent_path + [name],
+                "name": name,
+                "value": float(value),
+                "weight": float(weight),
+                "type": child["type"],
+                "icon": get_icon(child["type"], output="base64"),
+            }
+
+            rows.append(row)
+            if child["type"] == "pie":
+                rows.extend(recurse(child, row["path"]))
+
+        return rows
+
+    return recurse(portfolio)
