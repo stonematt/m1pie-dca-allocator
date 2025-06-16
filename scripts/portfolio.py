@@ -5,7 +5,7 @@ Handles parsing of canonical JSON format and recursive weight normalization.
 
 import os
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st
@@ -148,28 +148,29 @@ def get_icon_markdown(asset_type: str) -> str:
         return "◔" if asset_type == "pie" else "📈"
 
 
-def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
-    """
-    Format portfolio children into a display-ready table.
-
-    :param portfolio: Portfolio root node.
-    :return: DataFrame with icon, name, value, and weight.
-    """
-    rows = []
-    children = portfolio.get("children", {})
-    for name, child in children.items():
-        icon = get_icon_markdown(child["type"])
-        value = float(child["value"])
-        weight = float(child["weight"]) * 100
-        rows.append(
-            {
-                " ": icon,
-                "Name": name,
-                "Value": f"${value:,.2f}",
-                "Weight": f"{weight:.1f}%",
-            }
-        )
-    return pd.DataFrame(rows)
+# LEGACY: Use get_aggrid_portfolio_rows() for hierarchical views
+# def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
+#     """
+#     Format portfolio children into a display-ready table.
+#
+#     :param portfolio: Portfolio root node.
+#     :return: DataFrame with icon, name, value, and weight.
+#     """
+#     rows = []
+#     children = portfolio.get("children", {})
+#     for name, child in children.items():
+#         icon = get_icon_markdown(child["type"])
+#         value = float(child["value"])
+#         weight = float(child["weight"]) * 100
+#         rows.append(
+#             {
+#                 " ": icon,
+#                 "Name": name,
+#                 "Value": f"${value:,.2f}",
+#                 "Weight": f"{weight:.1f}%",
+#             }
+#         )
+#     return pd.DataFrame(rows)
 
 
 def create_and_save():
@@ -194,3 +195,38 @@ def make_example_portfolio():
     st.session_state["active_portfolio_name"] = "example"
     save_account_to_cookie(updated)
     logger.info("System-generated portfolio creation: 'example'")
+
+
+def get_aggrid_portfolio_rows(portfolio: dict) -> List[Dict[str, Any]]:
+    """
+    Flatten a nested portfolio into rows for AgGrid treeData view.
+    Each row includes a `path` key used by AgGrid to render hierarchy.
+    """
+
+    def recurse(
+        node: Dict[str, Any], path: List[str], parent_weight: Decimal = Decimal("1.0")
+    ) -> List[Dict[str, Any]]:
+        rows = []
+        if node["type"] != "pie":
+            return rows
+
+        total_value = sum(Decimal(str(c["value"])) for c in node["children"].values())
+
+        for name, child in node["children"].items():
+            value = Decimal(str(child["value"]))
+            weight = (value / total_value) if total_value > 0 else Decimal("0")
+            row = {
+                "name": name,
+                "value": float(value),
+                "weight": float(weight * parent_weight * 100),
+                "type": child["type"],
+                "path": path + [name],
+            }
+            rows.append(row)
+            if child["type"] == "pie":
+                rows.extend(
+                    recurse(child, path + [name], parent_weight=weight * parent_weight)
+                )
+        return rows
+
+    return recurse(portfolio, [])  # root name omitted from path
