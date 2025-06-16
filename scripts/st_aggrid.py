@@ -34,7 +34,9 @@ def render_portfolio_aggrid():
     logger.info("Rendering portfolio AgGrid view")
     portfolio = st.session_state["portfolio"]
     rows = get_aggrid_portfolio_rows(portfolio)
-    df_schema = pd.json_normalize(rows)
+    df_schema = pd.json_normalize(rows)[
+        ["path", "name", "icon", "value", "weight", "type"]
+    ]
 
     gb = GridOptionsBuilder.from_dataframe(df_schema)
     gb.configure_grid_options(
@@ -95,10 +97,10 @@ def render_portfolio_aggrid():
         header_name="Weight (%)",
         type=["numericColumn", "rightAligned"],
         valueFormatter=JsCode(
-            "function(params) { return params.value != null ? params.value.toFixed(2) + '%' : ''; }"
+            "function(params) { return params.value != null ? params.value.toFixed(1) + '%' : ''; }"
         ),
     )
-    gb.configure_column("type", header_name="Type", cellStyle={"textAlign": "center"})
+    gb.configure_column("type", hide=True)
 
     gridOptions = gb.build()
 
