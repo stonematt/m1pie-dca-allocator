@@ -3,6 +3,7 @@
     "title": "Parse Portfolio Screenshot via GPT-4 Vision",
     "description": "Users can upload an image of an M1 pie, which the system parses into structured portfolio data.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Users can upload .png, .jpg, or .jpeg images.",
       "The image is parsed into JSON with pie/ticker types and values.",
@@ -13,6 +14,7 @@
     "title": "Persist Parsed Portfolios",
     "description": "Parsed data is saved to JSON and reloaded in the UI.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Portfolios are stored in a data/ directory.",
       "User can select from saved portfolios."
@@ -22,6 +24,7 @@
     "title": "Display Portfolio Summary",
     "description": "Render loaded portfolio with ticker/pie breakdowns and weights.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Portfolio shows name, total value, and child breakdowns.",
       "Includes pie/ticker classification."
@@ -31,6 +34,7 @@
     "title": "Adjust Allocation with DCA Strategy",
     "description": "User can allocate new capital using a DCA model across existing and new tickers.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "User inputs new funds, percent to new tickers, and ticker count.",
       "Adjusted portfolio is calculated and saved."
@@ -40,6 +44,7 @@
     "title": "Log Level Control in UI",
     "description": "Users can set application log level via Streamlit.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Log level dropdown available.",
       "Log output respects selected level."
@@ -49,6 +54,7 @@
     "title": "Display DCA Allocation Output",
     "description": "Allocation results shown in a table including capital allocated per position.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Table includes capital allocated, target values, and weights.",
       "All monetary values are currency-formatted."
@@ -58,6 +64,7 @@
     "title": "Visualize Allocation Changes",
     "description": "Show pie charts of original vs adjusted allocations.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Two vertically stacked pies.",
       "Labels reflect tickers/pies."
@@ -67,6 +74,7 @@
     "title": "Improve Pie Chart Value Handling",
     "description": "Address decompression bomb error and switch to Plotly pies.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Uses Plotly.",
       "Charts render reliably and scale visually."
@@ -76,6 +84,7 @@
     "title": "Robust Ticker/Pie Classification",
     "description": "Better logic for distinguishing pies vs tickers, using icon cues and capital casing.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Vision prompt updated.",
       "Parsers recognize pie icon vs logo."
@@ -85,6 +94,7 @@
     "title": "Clear Adjusted State on Load",
     "description": "When user loads a new portfolio, adjusted view is cleared.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Adjusted view doesn’t persist after switching portfolios."
     ]
@@ -93,6 +103,7 @@
     "title": "Delete Portfolio Cleanly",
     "description": "Deleting a portfolio also clears UI if it’s the active portfolio.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Removes session state and hides display for deleted."
     ]
@@ -101,6 +112,7 @@
     "title": "Replace Portfolio on Upload",
     "description": "When an image is parsed, replace current portfolio content instead of merging.",
     "status": "not_started",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Upload replaces portfolio in session and on disk.",
       "Old data is discarded."
@@ -110,6 +122,7 @@
     "title": "Improve UX and visualization to optimize screen real estate",
     "description": "Refine layout and UI elements to make better use of vertical and horizontal space, ensuring clarity and responsiveness.",
     "status": "not_started",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Slider and inputs grouped to reduce vertical footprint.",
       "Tables and charts are placed side by side when possible.",
@@ -121,6 +134,7 @@
     "title": "Use Cookies for Portfolio Persistence",
     "description": "Persist current portfolio using real browser cookies (via extra-streamlit-components) instead of server-side storage.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Current portfolio is automatically saved to a browser cookie using extra-streamlit-components.",
       "On app reload, portfolio is restored from the cookie if present.",
@@ -133,6 +147,7 @@
     "title": "Add Support Link for Donations",
     "description": "Allow users to support development via a donation link (e.g., Buy Me a Coffee or Ko-fi).",
     "status": "not_started",
+    "label": "question",
     "acceptance_criteria": [
       "A support/donation button or link is visible in the sidebar or footer.",
       "Clicking the link opens a new tab to a configured donation platform.",
@@ -144,6 +159,7 @@
     "title": "Visualize DCA Impact with Sankey Diagram",
     "description": "Use a Sankey diagram to show how new capital from DCA input is distributed from source to pies and tickers. This enables users to intuitively grasp the allocation path and resulting impact.",
     "status": "not_started",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Sankey shows flow from new capital → pies/tickers.",
       "Width of flow lines corresponds to allocation amount.",
@@ -155,7 +171,8 @@
   {
     "title": "Visualize Portfolio Structure as Sankey Diagram",
     "description": "Add a new visualization option that uses a Sankey diagram to depict the nested pie → ticker structure, improving visibility into the full recursive allocation hierarchy. There is currently no visualization for this structure.",
-    "status": "in_progress",
+    "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "Root node is the top-level pie (e.g., \"main\").",
       "Intermediate nodes represent nested pies.",
@@ -170,6 +187,7 @@
     "title": "Warn if OpenAI API Key is Missing",
     "description": "Ensure the application gracefully handles the case where the OpenAI key is not set in `.streamlit/secrets.toml`. Display a user-facing warning and disable parsing functionality.",
     "status": "not_started",
+    "label": "question",
     "acceptance_criteria": [
       "On app start, check for presence of `secrets[\"openai\"][\"api_key\"]`.",
       "If missing, show a clear warning in the UI.",
@@ -181,6 +199,7 @@
     "title": "Add Button to Generate Example Portfolio",
     "description": "Add a button to the sidebar to generate a predefined 3-level nested test portfolio for debugging, development, and Sankey diagram validation.",
     "status": "complete",
+    "label": "enhancement",
     "acceptance_criteria": [
       "A button labeled \"make example portfolio\" appears in the sidebar UI.",
       "When clicked, replaces the current portfolio in session state with the generated test portfolio.",
