@@ -8,3 +8,4 @@ pandas>=1.0.0
 pytesseract>=0.3.10  # optional, used only in notebooks
 plotly
 extra-streamlit-components
+streamlit-aggrid>=0.3.4.post3
