@@ -179,31 +179,6 @@ def get_icon_markdown(asset_type: str) -> str:
         return "◔" if asset_type == "pie" else "📈"
 
 
-# LEGACY: Use get_aggrid_portfolio_rows() for hierarchical views
-# def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
-#     """
-#     Format portfolio children into a display-ready table.
-#
-#     :param portfolio: Portfolio root node.
-#     :return: DataFrame with icon, name, value, and weight.
-#     """
-#     rows = []
-#     children = portfolio.get("children", {})
-#     for name, child in children.items():
-#         icon = get_icon_markdown(child["type"])
-#         value = float(child["value"])
-#         weight = float(child["weight"]) * 100
-#         rows.append(
-#             {
-#                 " ": icon,
-#                 "Name": name,
-#                 "Value": f"${value:,.2f}",
-#                 "Weight": f"{weight:.1f}%",
-#             }
-#         )
-#     return pd.DataFrame(rows)
-
-
 def create_and_save():
     name = st.session_state["new_portfolio_name"].strip()
     if name:
