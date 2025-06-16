@@ -3,6 +3,7 @@
 Handles parsing of canonical JSON format and recursive weight normalization.
 """
 
+import os
 from decimal import Decimal
 from typing import Any, Dict
 
@@ -126,6 +127,27 @@ def save_current_portfolio():
     save_account_to_cookie(updated)
 
 
+def get_icon_markdown(asset_type: str) -> str:
+    """
+    Return markdown image string for asset type.
+
+    :param asset_type: 'pie' or 'ticker'
+    :return: Markdown ![](...) for Streamlit table
+    """
+    base_dir = os.path.dirname(__file__)
+    icon_map = {
+        "pie": os.path.join(base_dir, "../assets/pie_icon.png"),
+        "ticker": os.path.join(base_dir, "../assets/ticker_icon.png"),
+    }
+    path = icon_map.get(asset_type, "")
+
+    if os.path.exists(path):
+        return f"![{asset_type}](assets/{asset_type}_icon.png)"
+    else:
+        logger.warning(f"Icon file missing for type '{asset_type}': {path}")
+        return "◔" if asset_type == "pie" else "📈"
+
+
 def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
     """
     Format portfolio children into a display-ready table.
@@ -136,7 +158,7 @@ def format_portfolio_table(portfolio: dict) -> pd.DataFrame:
     rows = []
     children = portfolio.get("children", {})
     for name, child in children.items():
-        icon = "◔" if child["type"] == "pie" else "📈"
+        icon = get_icon_markdown(child["type"])
         value = float(child["value"])
         weight = float(child["weight"]) * 100
         rows.append(
