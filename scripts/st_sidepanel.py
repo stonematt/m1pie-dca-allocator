@@ -87,6 +87,7 @@ def render_sidepanel():
             make_example_portfolio()
 
         st.divider()
+
         render_support_link()
 
         # comment the settions options. this is more of a dev thing...
@@ -100,3 +101,4 @@ def render_sidepanel():
         # )
         # set_log_level(log_level)
         # st.caption(f"Logger set to {log_level}")
+        #
